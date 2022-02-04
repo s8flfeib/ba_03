@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang = "en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width = device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href=../css/register.css>
+    <meta http-equiv="X-UA-Compatible" content="ie = edge" />
+    <title>Register</title>
+</head>
+<body>
+    <div class="regform">
+        <h1>Registrierung</h1>
+    </div>
+
+    <div class="main">
+        <div class="error">
+            <ul class="list">
+                <% if (typeof errors != 'undefined') { %>
+                    <% errors.forEach(error => { %>
+                        <li><%= error.message %></li><% 
+                    }) %>
+                <% } %>
+                
+            </ul>
+        </div>
+          
+
+        <form action="/users/register" method="POST">
+            
+            <h2 class="name">Name</h2>
+                <input class ="firstname" type="text" id="name" name="name" placeholder="Name" required />
+                <br> 
+               
+            <h2 class="name">Passwort</h2>
+                <input class="password" type="password" id="password" name="password" placeholder="Passwort" required />
+                <br>
+                <input class="confirm" type="password" id="password2" name="password2" placeholder="Passwort bestätigen" required />
+            
+            <div class="register">
+                <input type="submit" value = "Registeren"/> 
+            </div>
+                
+            <br>
+            
+            
+            <div class="login">
+                    Bereits registriert? <a href="/users/login">Login here</a><br><br>
+                    Zurück zur <a href="/">Homepage</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>  

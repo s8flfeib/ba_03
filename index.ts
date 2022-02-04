@@ -1,5 +1,10 @@
 import { FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier } from "./firefly";
-import express, {Request, Response, NextFunction} from 'express'
+import express, {Request, Response, NextFunction} from 'express';
+const bcrypt = require('bcrypt');
+const { pool} = require("./dbConfig");
+const session = require("express-session");
+const flash = require("express-flash");
+//import { pool } from "./dbConfig";
 
 
 //import { newMessage } from "./public/scripts/script01";
@@ -20,7 +25,22 @@ import * as path from 'path'
 //var path = require('path')
 //app.use(express.static('public'))
 app.use(express.static(path.join(__dirname, 'public')));
+
+//set middleware
 app.set('view engine', 'ejs');
+//register post route allows to send data from frontend to server
+app.use(express.urlencoded({ extended: false }));
+app.use(
+    session({
+        secret: 'secret',
+
+        resave: false,
+
+        saveUninitialized: false
+    })
+);
+app.use(flash());
+
 
 async function main() {
     console.log('test')
@@ -45,6 +65,7 @@ async function main() {
         //console.log(req.body)
 
     })
+
     app.get("/send_text", (req: Request, res:Response) => {
         const message = JSON.stringify(req.query).split('"')[3];
         // console.log(x)
@@ -87,6 +108,79 @@ async function main() {
 
         res.redirect("/");
         
+    })
+
+    app.get("/users/dashboard", (req: Request, res:Response) => {
+        res.render('dashboard', {user: "Boss"});
+    })
+
+    app.get("/users/register", (req: Request, res:Response) => {
+        res.render('register');
+    })
+    app.post("/users/register", async (req:Request, res:Response) => {
+        
+        let { name, password, password2 } = req.body;
+        let errors:any = [];
+
+        // console.log({
+        //     name,
+        //     password,
+        //     password2
+        // })
+
+        //validation check
+        if (!name || !password || !password2){
+            errors.push({ message: "Bitte füllen Sie alle Felder aus"});
+        }
+        if (password!=password2){
+            errors.push({ message: "Passwörter stimmen nicht überein!"});
+        }
+        // if (password.length < 6) {
+        //     errors.push({ message: "Passwort muss bestimmte Länge haben"})
+        // }
+        if(errors.length > 0){
+            res.render('register', {errors});
+        } else {
+            //Form Validation ok
+
+            let hashedPassword = await bcrypt.hash(password, 10);
+            console.log(hashedPassword);
+
+            //check if user allready exists für mich irrelevant
+            pool.query(
+                'SELECT * FROM users WHERE name = $1', [name], (err:String,results:any) =>{
+                    if(err){
+                        throw err
+                    }
+                    console.log(results.rows);
+
+                    if(results.rows.length > 0){
+                        errors.push({ message: "Name bereits vergeben"});
+                        res.render('register', {errors});
+                    }else{
+                        //register the user
+                        pool.query(
+                            `INSERT INTO users(name, password)
+                            VALUES($1, $2, $3)
+                            RETURNING id, password`, [name, hashedPassword], (err:any, results:any) => {
+                                if (err){
+                                    throw err
+                                }
+                                console.log(results.rows);
+                                //req.flash('success_msg', "Die Registrierung war erfolgreich");
+                                res.redirect('users/login');
+                            }
+
+                        )
+                    }
+                }
+            )
+        }
+
+    })
+
+    app.get("/users/login", (req: Request, res:Response) => {
+        res.render('login');
     })
 
     const PORT = process.env.PORT || 2000

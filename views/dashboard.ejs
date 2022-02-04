@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8"> 
+    <title>Landing Page</title>
+    <!-- <script type="text/javascript" src="scripts/script01.js"></script> -->
+    <script type="text/typescript" src="scripts/script01.ts"></script>
+    <!--<script src="../index.ts"></script>-->
+    <!-- <link rel="stylesheet" href="css/style.css"> -->
+</head>
+
+<body>
+    <h1 class="headline">Ihr Dashboard</h1>
+
+    <h1>Hello <%= user %></h1>
+
+    
+    <!-- Send messages to the blockchain -->
+    <h4>Senden Sie eine Nachricht</h4>
+    <form action="/send_text" method=GET>
+        Nachricht: <input name="message" type="text" id="message"><br>
+        <button type="submit">SUBMIT</button>
+        <!-- <input value="text" type="submit"> -->
+    </form>
+
+    <!-- Get Messages -->
+    <form action="/read_text" method=GET>
+        <button type="submit">GET MESSAGE</button>
+    </form>
+
+    <!-- Send Files to the Blockchain -->
+    <h4>Senden Sie ihre Dokumente</h4>
+    <form action="/send_file" method="GET" enctype=multipart/form-data >
+        Dokumente: <input name="file" type="file" multiple="" id="file"><br>
+        <!-- direkt hinter file kann noch multiple gestellt werde -->
+        <button type="submit">SUBMIT</button>
+    </form>
+    <br>
+    <a href="/">Logout</a>
+
+    <!-- Für Typescript benötigt  -->
+    <script>var exports = {};</script>
+    <script src="https://rawgit.com/Microsoft/TypeScript/master/lib/typescriptServices.js"></script>
+    <script src="https://rawgit.com/basarat/typescript-script/master/transpiler.js"></script>
+</body>
+
+</html>
