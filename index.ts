@@ -4,6 +4,15 @@ const bcrypt = require('bcrypt');
 const { pool} = require("./dbConfig");
 const session = require("express-session");
 const flash = require("express-flash");
+const passport = require("passport");
+
+
+const initializePassport = require("./passportConfig");
+
+initializePassport(passport);
+
+const PORT = process.env.PORT || 2000
+
 //import { pool } from "./dbConfig";
 
 
@@ -39,6 +48,9 @@ app.use(
         saveUninitialized: false
     })
 );
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(flash());
 
 
@@ -66,7 +78,7 @@ async function main() {
 
     })
 
-    app.get("/send_text", (req: Request, res:Response) => {
+    app.get("/send_text", checkNotAuthenticated, (req: Request, res:Response) => {
         const message = JSON.stringify(req.query).split('"')[3];
         // console.log(x)
         // console.log(req.query);
@@ -77,7 +89,7 @@ async function main() {
         ]
         //ohne "async" ??
         firefly1.sendBroadcast(sendData); 
-        res.redirect("/")
+        res.redirect("/users/dashboard")
     })
 
     app.get("/send_file", (req: Request, res:Response) => { 
@@ -106,15 +118,18 @@ async function main() {
             // console.log(msg[1].data.map((d) => JSON.stringify(d?.value || '',null, 2)).join(', '))};
         })
 
-        res.redirect("/");
+        res.redirect("/users/dashboard");
         
     })
 
-    app.get("/users/dashboard", (req: Request, res:Response) => {
-        res.render('dashboard', {user: "Boss"});
+    //check authentication before moving on to the rest
+    app.get("/users/dashboard", checkNotAuthenticated, (req: any, res:any) => {
+        //console.log(req.user);
+        res.render('dashboard', {user: req.user.name});
     })
 
-    app.get("/users/register", (req: Request, res:Response) => {
+    //check authentication before moving on to the rest
+    app.get("/users/register", checkAuthenticated, (req: Request, res:Response) => {
         res.render('register');
     })
     app.post("/users/register", async (req:Request, res:Response) => {
@@ -144,7 +159,7 @@ async function main() {
             //Form Validation ok
 
             let hashedPassword = await bcrypt.hash(password, 10);
-            console.log(hashedPassword);
+            //console.log(hashedPassword);
 
             //check if user allready exists für mich irrelevant
             pool.query(
@@ -152,7 +167,7 @@ async function main() {
                     if(err){
                         throw err
                     }
-                    console.log(results.rows);
+                    //console.log(results.rows);
 
                     if(results.rows.length > 0){
                         errors.push({ message: "Name bereits vergeben"});
@@ -161,14 +176,17 @@ async function main() {
                         //register the user
                         pool.query(
                             `INSERT INTO users(name, password)
-                            VALUES($1, $2, $3)
+                            VALUES($1, $2)
                             RETURNING id, password`, [name, hashedPassword], (err:any, results:any) => {
                                 if (err){
                                     throw err
                                 }
                                 console.log(results.rows);
-                                //req.flash('success_msg', "Die Registrierung war erfolgreich");
-                                res.redirect('users/login');
+                                // req.flash('success_msg', 'Die Registrierung war erfolgreich, logge dich jetzt ein!');
+                                // console.log(req.flash);
+                                req.flash('success_msg', "Die Registrierung war erfolgreich!");
+                                req.flash('success_msg1', "Bitte loggen Sie sich ein");
+                                res.redirect('/users/login');
                             }
 
                         )
@@ -179,11 +197,43 @@ async function main() {
 
     })
 
-    app.get("/users/login", (req: Request, res:Response) => {
+    //check authentication before moving on to the rest
+    app.get("/users/login", checkAuthenticated, (req: Request, res:Response) => {
         res.render('login');
     })
 
-    const PORT = process.env.PORT || 2000
+    app.post("/users/login", passport.authenticate('local', {
+            successRedirect: "/users/dashboard",
+            failureRedirect: "/users/login",
+            failureFlash: true
+        })
+    );
+
+    app.get('/users/logout', (req:any,res:any) => {
+        req.logOut();
+        req.flash('success_msg', "Sie sind abgemeldet");
+        res.redirect("/users/login");
+    })
+
+
+    //Wenn der Nutzer nicht Authenticated ist und er auf das Dashboard will wird er zur login zurück geleitet
+    //Wenn er es ist kann er direkt darauf zugreifen und wenn er auf login/register will wird er zum dashboard geleitet
+    function checkAuthenticated(req:any, res:any, next:any) {
+        if (req.isAuthenticated()) {
+            return res.redirect("/users/dashboard");
+        }
+        next();
+    }
+    
+    function checkNotAuthenticated(req:any, res:any, next:any) {
+        if (req.isAuthenticated()) {
+            return next();
+        }
+        res.redirect("/users/login");
+    }
+
+
+    
     
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`)

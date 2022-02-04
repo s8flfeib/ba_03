@@ -13,7 +13,8 @@
 <body>
     <h1 class="headline">Ihr Dashboard</h1>
 
-    <h1>Hello <%= user %></h1>
+    <!--Damit der erste Buchstabe des Namens gross geschrieben wird-->
+    <h1>Hello <%= user.charAt(0).toUpperCase() + user.slice(1) %></h1>
 
     
     <!-- Send messages to the blockchain -->
@@ -37,7 +38,7 @@
         <button type="submit">SUBMIT</button>
     </form>
     <br>
-    <a href="/">Logout</a>
+    <a href="/users/logout">Logout</a>
 
     <!-- Für Typescript benötigt  -->
     <script>var exports = {};</script>

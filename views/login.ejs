@@ -5,15 +5,20 @@
     <meta name="viewport" content="width = device-width, initial-scale=1.0" />
     <link rel="stylesheet" href=../css/register.css>
     <meta http-equiv="X-UA-Compatible" content="ie = edge" />
-    <title>Register</title>
+    <title>Login</title>
 </head>
 <body>
-    <div class="regform">
-        <h1>Login</h1>
-    </div>
+    <h1>Login</h1>
+
+    
+    <ul>
+        <% if(messages.success_msg) { %>
+        <li><% messages.success_msg %></li>
+        <% } %>
+    </ul>
 
     <div class="main">
-        <div class="error">
+        <!-- <div class="error">
             <ul class="list">
                 <% if (typeof errors != 'undefined') { %>
                 <% errors.forEach(error => { %>
@@ -22,6 +27,27 @@
                 
                 <% } %>
                 
+            </ul>
+        </div> -->
+        <div class="error">
+            <!--wrong credenatials-->
+            <ul class="list1">
+                <% if (typeof errors != 'undefined') { %> <% errors.forEach(error => { %>
+                <li><%= error.message %></li>
+                <% }) %> <% } %>
+            </ul>
+            <!--registration successful bzw. logout massage-->
+            <ul class="list2">
+                <% if(messages.success_msg) { %>
+                <li><%= messages.success_msg %></li>
+                <li><%= messages.success_msg1 %></li>
+                <% } %>
+            </ul>
+            <!--Name not in DB!-->
+            <ul class="list3">
+                <% if (messages.error) { %>
+                <li><%= messages.error %></li>
+                <% } %>
             </ul>
         </div>
           
@@ -35,7 +61,7 @@
             <h2 class="name">Passwort</h2>
                 <input class="password" type="password" id="password" name="password" placeholder="Passwort" required />
 
-            <div class="register">
+            <div class="login">
                 <input type="submit" value = "Login"/> 
             </div>
                 
