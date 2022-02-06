@@ -2,9 +2,13 @@
 <html lang="de">
 
 <head>
-
+    <meta charset="UTF-8"> 
+    <title>Landing Page</title>
+    <!-- <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script> -->
 </head>
     <h1 class="headline">Ihr Dashboard</h1>
+
+    <h1>Hello <%= user.charAt(0).toUpperCase() + user.slice(1) %></h1>
         
     <ul class="navbar">
         <a href="/users/register">Registrieren</a>
@@ -16,6 +20,6 @@
     
 </body>
 
-<script>
-    
-</script>
+<!-- <script>
+    var socket = io.connect('http://localhost:2000');
+</script> -->

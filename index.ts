@@ -1,11 +1,14 @@
-import { FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier } from "./firefly";
-import express, {Request, Response, NextFunction} from 'express';
+import { FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput } from "./firefly";
+//import express, {Request, Response, NextFunction, response} from 'express';
+const express = require('express');
+const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 const { pool} = require("./dbConfig");
 const session = require("express-session");
 const flash = require("express-flash");
 const passport = require("passport");
-
+const fetch = require("fetch");
+const socket = require("socket.io");
 
 const initializePassport = require("./passportConfig");
 
@@ -13,8 +16,20 @@ initializePassport(passport);
 
 const PORT = process.env.PORT || 2000
 
-//import { pool } from "./dbConfig";
+const app = express();
 
+const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+})
+
+const io = socket(server);
+
+// io.sockets.on('connection', newConnection);
+
+// function newConnection(socket:any){
+//     console.log("New Socket Connection")
+//     console.log(socket.id)
+// }
 
 //import { newMessage } from "./public/scripts/script01";
 const MAX_MESSAGES = 25;
@@ -26,16 +41,20 @@ interface MessageRow {
     message: FireFlyMessage;
     data: FireFlyData[];
 }
+
 //const dataValues = (data: FireFlyData[]) => data.map( d => d.value);
 //const express = require( "express" );
-const app = express();
-
 import * as path from 'path'
+import { convertToObject, ExitStatus, setConstantValue } from "typescript";
 //var path = require('path')
 //app.use(express.static('public'))
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 
 //set middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+//app.ust(express.json({ limit: '1mb })); helps to protect server from huge data
+
 app.set('view engine', 'ejs');
 //register post route allows to send data from frontend to server
 app.use(express.urlencoded({ extended: false }));
@@ -55,72 +74,150 @@ app.use(flash());
 
 
 async function main() {
+
     console.log('test')
     const firefly1 = new FireFly(5000);
     const ws1 = new FireFlyListener(5000);
-    const firefly2 = new FireFly(5000);
-    const ws2 = new FireFlyListener(5000);
-    const firefly3 = new FireFly(5000);
-    const ws3 = new FireFlyListener(5000);
+    const firefly2 = new FireFly(5001);
+    const ws2 = new FireFlyListener(5001);
+    const firefly3 = new FireFly(5002);
+    const ws3 = new FireFlyListener(5002);
     
-
+    
     await ws1.ready();
     await ws2.ready();
     await ws3.ready();
 
 
 
-    //Collect inputs:
-    app.get("/", (req: Request, res:Response, next:NextFunction) => {
-        //console.log(res);
+    //Start Index:
+    app.get("/", (req: any, res:any) => {
         res.render('index', {user: "Flo"});
         //console.log(req.body)
 
     })
 
-    app.get("/send_text", checkNotAuthenticated, (req: Request, res:Response) => {
+    app.get("/send_text", checkNotAuthenticated, (req:any, res:any) => {
         const message = JSON.stringify(req.query).split('"')[3];
         // console.log(x)
         // console.log(req.query);
-        // let text = req.query;
-        // console.log(typeof(text));
+        //let text = req.query;
+        //console.log(typeof(text));
         const sendData: FireFlyDataSend[] = [
             {value: message}
         ]
-        //ohne "async" ??
-        firefly1.sendBroadcast(sendData); 
+        
+        const recipients: FireFlyMemberInput[] = [];
+
+        console.log(req.body);
+
+        var isPrivate = 1;
+        //var isPrivate = 0;
+
+        if(isPrivate) {
+            //private message
+            //FireFly_ORGS_IDs:
+            // -0x1f0ee3b0210f0ce8f818376a001c152bf13a5436
+            // -0xa73905518f8f267e598ff920c203663531bb680b
+            // -0x891e51c19bc64dc06fd98ae89dfea7603b047b75
+            //recipients.push({identity: "0xa73905518f8f267e598ff920c203663531bb680b"});
+            //recipients.push({identity: "0x1f0ee3b0210f0ce8f818376a001c152bf13a5436"});
+            recipients.push({identity: "0x891e51c19bc64dc06fd98ae89dfea7603b047b75"});
+
+
+            firefly2.sendPrivate({
+                data: [
+                    {
+                        value: message,
+                    },
+                    ],
+                    group: {
+                    members: recipients,
+                    },
+            });
+        }else{
+        //broadcast wo ist der unterschied ob ff1, ff2 oder ff3
+            switch(req.user.name) {
+                case "Mandant":
+                    console.log("Send from M");
+                    firefly1.sendBroadcast(sendData); 
+                case "Steuerberater":
+                    console.log("Send from S");
+                    firefly2.sendBroadcast(sendData); 
+                case "Finanzamt":
+                    console.log("Send from F");
+                    firefly3.sendBroadcast(sendData); 
+            }
+
+        }
         res.redirect("/users/dashboard")
     })
 
-    app.get("/send_file", (req: Request, res:Response) => { 
+    app.get("/send_file", (req: any, res:any) => { 
         var file = req.query;
         console.log("File send")
         console.log(file)
         res.redirect("/")
     })
 
-    app.get("/read_text", (req: Request, res:Response) => {
-        var msg: FireFlyMessage[] = [];
-        var ffid: FireFlyDataIdentifier[] = [];
-        var message1: string;
+    app.get("/read_text", async (req: any, res:any) => {
+        //bring to corresponding login page
 
-        // Gets id and Hash of messages depending which response value 
-        var message = firefly1.getMessages(1).then(function(response){
-            ffid = response[0].data;
-            msg = response
+        //Gets id and Hash of messages depending which response value 
+        var allMsg = await firefly1.getMessages(MAX_MESSAGES)
+        //console.log(response);
+        const rows: MessageRow[] = [];
+        //push all 25 messages to MessageRow{message: FireFlyMessage, data:FireFlyData[]}
+        for(const message of allMsg) {
+            var message_data = await firefly1.retrieveData(message.data)
+            rows.push({message: message, data: message_data})
+        }
+        //access massages and time
+        console.log(rows[20].data[0].value);
+        console.log(rows[20].message.header.created);
+        
+        //setup socket connection => set connection up on client side (check Socket.io)
+        // io.on('connection', (socket:any) => {
+        //     console.log(socket.id);
+        // });
+        // console.log("Im here!");
+        // // function newConnection(socket:any) {
+        //     console.log('new Socket Connection' + socket.id);
+        //     console.log(socket.id);
+        // }
 
-            // Gets message from FFID
-            var data1 = firefly1.retrieveData(ffid).then(function(res){
-                message1 = res[0].value;
-                console.log("The last message was: " + res[0].value);
+        io.on('connection', newConnection);
+
+        function newConnection(socket:any){
+            console.log("New Socket Connection: " + socket.id);
+            //print out the message event
+            socket.on('chat message', (msg:any) => {
+                console.log('chat message received' + msg);
+                //send back the message to all 
+                io.emit('chat message received', rows);
+            });
+            socket.on('disconnect', () => {
+                //triggers when closing browser or logout
+                console.log('user disconnected');
             })
-
-            // console.log(msg[1].data.map((d) => JSON.stringify(d?.value || '',null, 2)).join(', '))};
-        })
+        }
 
         res.redirect("/users/dashboard");
         
     })
+
+    //Playing around with fetch
+    //req holds all the information and data thats send from the client
+    //res variable that can be used to send back to the client
+    // app.post('/api',(req, res) => {
+    //     console.log(req.body);
+    //     res.json({
+    //         status: "success",
+    //         latitude: req.body.lat,
+    //         longitude: req.body.long
+    //     });
+    //     //res.end();
+    // });
 
     //check authentication before moving on to the rest
     app.get("/users/dashboard", checkNotAuthenticated, (req: any, res:any) => {
@@ -129,10 +226,10 @@ async function main() {
     })
 
     //check authentication before moving on to the rest
-    app.get("/users/register", checkAuthenticated, (req: Request, res:Response) => {
+    app.get("/users/register", checkAuthenticated, (req: any, res:any) => {
         res.render('register');
     })
-    app.post("/users/register", async (req:Request, res:Response) => {
+    app.post("/users/register", async (req:any, res:any) => {
         
         let { name, password, password2 } = req.body;
         let errors:any = [];
@@ -198,7 +295,7 @@ async function main() {
     })
 
     //check authentication before moving on to the rest
-    app.get("/users/login", checkAuthenticated, (req: Request, res:Response) => {
+    app.get("/users/login", checkAuthenticated, (req: any, res:any) => {
         res.render('login');
     })
 
@@ -235,9 +332,7 @@ async function main() {
 
     
     
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`)
-    })
+    
 
 }
 

@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8"> 
     <title>Landing Page</title>
-    <!-- <script type="text/javascript" src="scripts/script01.js"></script> -->
-    <script type="text/typescript" src="scripts/script01.ts"></script>
-    <!--<script src="../index.ts"></script>-->
-    <!-- <link rel="stylesheet" href="css/style.css"> -->
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
+    <!-- <link rel="stylesheet" href="../css/dashboard.css"> -->
+
 </head>
 
 <body>
@@ -19,13 +18,51 @@
     
     <!-- Send messages to the blockchain -->
     <h4>Senden Sie eine Nachricht</h4>
+
+    <!--Private Message option-->
+    <!-- <div class="options">
+        <ul>
+            <li>
+                Steuerberater <input type="checkbox">
+            </li>
+            <li>
+                Finanzamt <input type="checkbox">
+            </li>
+            <li>
+                Mandant <input type="checkbox">
+            </li>
+        </ul>
+    </div> -->
+    <h4>Private Message </h4>
+    <form action="/send_text" method=POST>
+        <label class="switch">
+            <input type="checkbox">
+            <span class="slider"></span>
+        </label>
+    </form>
+
+    <br>
+    <!-- Display last 25 messages -->
+    <p>
+        <span>
+            <ol>
+                <li id="listelement"></li><br>
+            </ol>
+        </span>
+    </p>
+
+    <br>
+
+    <!--Send Broadcast-->
     <form action="/send_text" method=GET>
-        Nachricht: <input name="message" type="text" id="message"><br>
+        Nachricht: <input name="message" type="text" id="message" onclick="checkbox()"><br>
         <button type="submit">SUBMIT</button>
         <!-- <input value="text" type="submit"> -->
     </form>
-
+    <br>
     <!-- Get Messages -->
+
+
     <form action="/read_text" method=GET>
         <button type="submit">GET MESSAGE</button>
     </form>
@@ -38,7 +75,118 @@
         <button type="submit">SUBMIT</button>
     </form>
     <br>
+
+
+
+
+
+    <br>
     <a href="/users/logout">Logout</a>
+
+
+    <!-- <p>
+        latitude: <span id="latitude"></span>&deg;<br>
+        longitude: <span id="longitude"></span>&deg;<br>
+    
+    </p> -->
+
+    <!-- <script>
+        const response = fetch('/users/dashboard', options);
+        const data = response.json();
+        console.log(data[0])
+    </script> -->
+
+    <!--Some scripts-->
+    <!-- <script>
+        if('geolocation' in navigator) {
+            console.log('geolocation available');
+            //If so get geolocation async function => says get current pos if its ready console log it
+            //get data on client side and send to server using post request fetch
+            navigator.geolocation.getCurrentPosition(async position => {
+                const lat = position.coords.latitude;
+                const long= position.coords.longitude;
+                document.getElementById('latitude').textContent = lat;
+                document.getElementById('longitude').textContent = long;
+
+                //send location inside of an object
+                const data = {lat, long};
+                //a lot of infos you can put into the option webdocs fetch 
+                //body is what i want
+                const options = {
+                    method: 'POST',
+                    //specify data as json data in the header
+                    headers: {
+                        'Content-Type': 'application/json'
+                        
+                    },
+                    body: JSON.stringify(data)
+                }
+                //fetch returns a promis => .then
+                const response = await fetch('/api', options);
+                const json = await response.json();
+                console.log(json);
+            });
+            
+        } else {
+            console.log('geolocation NOT available');
+            //in order to send a post      
+        }
+    </script> -->
+    <ul id="messages">
+    </ul>
+    <form id="form" action="">      
+        <input id="input" autocomplete="off" />
+        <button>Send</button>
+    </form>
+    <!-- Socket.io -->
+    <script>
+        var socket = io.connect('http://localhost:2000');
+        //send data from client to server: need jsobject with data and give it a name 
+        // console.log('Sending');
+        // var data = {
+        //     a: "Test",
+        //     b: "Data"
+        // }
+        // socket.emit('message', data);
+
+        var messages = document.getElementById('messages');
+
+        var form = document.getElementById('form');
+        console.log(form);
+        var input = document.getElementById('input');
+        console.log(input)
+        
+        //send messages to server
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if(input.value){
+                socket.emit('chat message', input.value);
+                input.value = '';
+            }
+        });
+
+        //receive messages from server
+        socket.on('chat message received', function(msg) {
+            console.log(msg);
+            for(var i of msg){
+                var item = document.createElement('li');
+                item.textContent = i.data[0].value;
+                var time = document.createElement('li');
+                time.textContent = i.message.header.created;
+                var author = document.createElement('li');
+                author.textContent = i.message.header.author;
+                messages.appendChild(item);
+                messages.appendChild(time);
+                messages.appendChild(author);
+            }
+
+            
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+
+    </script>
+    
 
     <!-- Für Typescript benötigt  -->
     <script>var exports = {};</script>

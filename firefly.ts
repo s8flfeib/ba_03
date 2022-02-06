@@ -9,9 +9,6 @@ export interface FireFlyData extends FireFlyDataSend {
 id: string;
 }
 
-// export interface FireFlyData {
-//     value: string;
-// }
   
 export interface FireFlyDataIdentifier {
     id: string;
@@ -27,6 +24,20 @@ export interface FireFlyMessage {
     local: boolean;
     data: FireFlyDataIdentifier[];
 }
+
+export interface FireFlyMessageInput {
+    data: FireFlyDataSend[];
+    group: {
+      name?: string;
+      members: FireFlyMemberInput[];
+    };
+}
+
+export interface FireFlyMemberInput {
+    identity: string;
+}
+
+
 // export interface FireFlyMessage {
 //     id: string;
 //     type: string;
@@ -59,18 +70,6 @@ export class FireFlyListener {
         this.ws.close();
     }
 
-    // async firstMessageOfType(type: string, timeout: number) {
-    //     const expire = Date.now() + timeout;
-    //     while (Date.now() < expire) {
-    //         for (const message of this.messages) {
-    //             if (message.type === type) {
-    //                 return message;
-    //             }
-    //         }
-    //         await new Promise(resolve => setTimeout(resolve, 100));
-    //     }
-    //     return undefined;
-    // }
 }
 
 export class FireFly {
@@ -83,6 +82,10 @@ export class FireFly {
     
     async sendBroadcast(data: FireFlyDataSend[]) {
         await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
+    }
+
+    async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
+        await this.rest.post(`/namespaces/${this.ns}/send/message`, privateMessage);
     }
     
     async getMessages(limit: number): Promise<FireFlyMessage[]> {
