@@ -63,16 +63,15 @@
     <!-- Get Messages -->
 
 
-    <form action="/read_text" method=GET>
-        <button type="submit">GET MESSAGE</button>
-    </form>
+
 
     <!-- Send Files to the Blockchain -->
+    <!-- direkt hinter file kann noch multiple gestellt werde -->
     <h4>Senden Sie ihre Dokumente</h4>
-    <form action="/send_file" method="GET" enctype=multipart/form-data >
-        Dokumente: <input name="file" type="file" multiple="" id="file"><br>
-        <!-- direkt hinter file kann noch multiple gestellt werde -->
-        <button type="submit">SUBMIT</button>
+    <form action="/send_file" method="POST" enctype=multipart/form-data >
+        <label for="document">Dokumente: </label> 
+        <input name="file" type="file" multiple="" id="file"/><br>
+        <button type="submit">Upload</button>
     </form>
     <br>
 
@@ -141,13 +140,6 @@
     <!-- Socket.io -->
     <script>
         var socket = io.connect('http://localhost:2000');
-        //send data from client to server: need jsobject with data and give it a name 
-        // console.log('Sending');
-        // var data = {
-        //     a: "Test",
-        //     b: "Data"
-        // }
-        // socket.emit('message', data);
 
         var messages = document.getElementById('messages');
 
@@ -155,6 +147,8 @@
         console.log(form);
         var input = document.getElementById('input');
         console.log(input)
+
+
         
         //send messages to server
         form.addEventListener('submit', function(e) {
@@ -165,8 +159,10 @@
             }
         });
 
+        console.log("HERE!")
         //receive messages from server
         socket.on('chat message received', function(msg) {
+            console.log("We ARE HERE!")
             console.log(msg);
             for(var i of msg){
                 var item = document.createElement('li');
@@ -184,6 +180,14 @@
             window.scrollTo(0, document.body.scrollHeight);
         });
 
+
+        //send data from client to server: need jsobject with data and give it a name 
+        // console.log('Sending');
+        // var data = {
+        //     a: "Test",
+        //     b: "Data"
+        // }
+        // socket.emit('message', data);
 
     </script>
     

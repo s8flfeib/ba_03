@@ -9,6 +9,7 @@ const flash = require("express-flash");
 const passport = require("passport");
 const fetch = require("fetch");
 const socket = require("socket.io");
+const multer = require("multer");
 
 const initializePassport = require("./passportConfig");
 
@@ -24,12 +25,18 @@ const server = app.listen(PORT, () => {
 
 const io = socket(server);
 
-// io.sockets.on('connection', newConnection);
+//multer setup
+const fileStorageEngine = multer.diskStorage({
+    destination: (req:any, file:any, cb:any) => {
+        cb(null, "./uploads");
+    },
+    filename: (req:any, file:any, cb:any) => {
+        cb(null, Date.now() + "--" + file.originalname);
+    }
+});
 
-// function newConnection(socket:any){
-//     console.log("New Socket Connection")
-//     console.log(socket.id)
-// }
+const upload = multer({storage: fileStorageEngine});
+
 
 //import { newMessage } from "./public/scripts/script01";
 const MAX_MESSAGES = 25;
@@ -45,7 +52,7 @@ interface MessageRow {
 //const dataValues = (data: FireFlyData[]) => data.map( d => d.value);
 //const express = require( "express" );
 import * as path from 'path'
-import { convertToObject, ExitStatus, setConstantValue } from "typescript";
+import { convertToObject, ExitStatus, isNamedExportBindings, setConstantValue } from "typescript";
 //var path = require('path')
 //app.use(express.static('public'))
 app.use(express.static(path.join(__dirname, '../public')));
@@ -99,6 +106,7 @@ async function main() {
 
     app.get("/send_text", checkNotAuthenticated, (req:any, res:any) => {
         const message = JSON.stringify(req.query).split('"')[3];
+        console.log("MESSAGE: " + message);
         // console.log(x)
         // console.log(req.query);
         //let text = req.query;
@@ -111,8 +119,8 @@ async function main() {
 
         console.log(req.body);
 
-        var isPrivate = 1;
-        //var isPrivate = 0;
+        //var isPrivate = 1;
+        var isPrivate = 0;
 
         if(isPrivate) {
             //private message
@@ -122,10 +130,12 @@ async function main() {
             // -0x891e51c19bc64dc06fd98ae89dfea7603b047b75
             //recipients.push({identity: "0xa73905518f8f267e598ff920c203663531bb680b"});
             //recipients.push({identity: "0x1f0ee3b0210f0ce8f818376a001c152bf13a5436"});
+
+            //org2
             recipients.push({identity: "0x891e51c19bc64dc06fd98ae89dfea7603b047b75"});
 
-
-            firefly2.sendPrivate({
+            //ff1 is org0
+            firefly1.sendPrivate({
                 data: [
                     {
                         value: message,
@@ -153,92 +163,91 @@ async function main() {
         res.redirect("/users/dashboard")
     })
 
-    app.get("/send_file", (req: any, res:any) => { 
-        var file = req.query;
-        console.log("File send")
-        console.log(file)
-        res.redirect("/")
-    })
+    app.get("/send_file",  (req: any, res:any) => { 
 
-    app.get("/read_text", async (req: any, res:any) => {
-        //bring to corresponding login page
+        res.redirect("/users/dashboard")
+    });
 
-        //Gets id and Hash of messages depending which response value 
-        var allMsg = await firefly1.getMessages(MAX_MESSAGES)
+    //Send and sage pdf from client to server
+    //file is the name of the input 
+    //uploade.single('file') for single file
+    //req.file gives information
+    //uploade.array('files', x) => x give number of how many files are allowed
+    //req.files gives informations
+
+    app.post("/send_file", upload.array('file'), async (req:any, res:any) => {
+        console.log(req.files);
+        console.log("File Uploaded")
+
+        
+        var data: FireFlyMessage[];
+
+        data = await firefly1.getData();
+        var d = JSON.stringify(data);
+        console.log("Type: " + typeof(d));
+        var datatobroadcast = d.split(":")[1].split(",")[0].slice(1,-1);
+
+        var id: FireFlyDataSend[] = [
+            {value: datatobroadcast}
+        ]
+
+        console.log("We got the Data: " + datatobroadcast);
+
+        //1 zu 1 broadcast message
+        await firefly1.broadcastData(id);
+
+        var p = await firefly2.getData();
+        console.log(p)
+        console.log("We broadcasted the Data");
+
+        res.send("Single File upload success")
+        // res.redirect("/users/dashboard")
+    });
+
+    app.get("/users/dashboard", checkNotAuthenticated, (req:any, res:any) => {
+        res.render("dashboard", {user: req.user.name});
+    });
+
+
+    app.get("/users/dashboard_01", checkNotAuthenticated, async (req: any, res:any) => {
+        //Load last 25 Messages
+        //Get id and Hash of the Messages 
+        var allMessages = await firefly1.getMessages(2);
         //console.log(response);
         const rows: MessageRow[] = [];
         //push all 25 messages to MessageRow{message: FireFlyMessage, data:FireFlyData[]}
-        for(const message of allMsg) {
+        for(const message of allMessages) {
             var message_data = await firefly1.retrieveData(message.data)
             rows.push({message: message, data: message_data})
         }
         //access massages and time
-        console.log(rows[20].data[0].value);
-        console.log(rows[20].message.header.created);
-        
-        //setup socket connection => set connection up on client side (check Socket.io)
-        // io.on('connection', (socket:any) => {
-        //     console.log(socket.id);
-        // });
-        // console.log("Im here!");
-        // // function newConnection(socket:any) {
-        //     console.log('new Socket Connection' + socket.id);
-        //     console.log(socket.id);
-        // }
+        // console.log(rows[20].data[0].value);
+        // console.log(rows[20].message.header.created);
 
+        //Set up Socket.io connection to send to the client
         io.on('connection', newConnection);
 
         function newConnection(socket:any){
             console.log("New Socket Connection: " + socket.id);
-            //print out the message event
-            socket.on('chat message', (msg:any) => {
-                console.log('chat message received' + msg);
-                //send back the message to all 
-                io.emit('chat message received', rows);
-            });
+            console.log("send rows to client");
+            io.emit('chat message received', rows);
+
             socket.on('disconnect', () => {
                 //triggers when closing browser or logout
                 console.log('user disconnected');
             })
         }
-
-        res.redirect("/users/dashboard");
-        
-    })
-
-    //Playing around with fetch
-    //req holds all the information and data thats send from the client
-    //res variable that can be used to send back to the client
-    // app.post('/api',(req, res) => {
-    //     console.log(req.body);
-    //     res.json({
-    //         status: "success",
-    //         latitude: req.body.lat,
-    //         longitude: req.body.long
-    //     });
-    //     //res.end();
-    // });
-
-    //check authentication before moving on to the rest
-    app.get("/users/dashboard", checkNotAuthenticated, (req: any, res:any) => {
-        //console.log(req.user);
-        res.render('dashboard', {user: req.user.name});
+        res.redirect('dashboard');
     })
 
     //check authentication before moving on to the rest
     app.get("/users/register", checkAuthenticated, (req: any, res:any) => {
         res.render('register');
     })
+
     app.post("/users/register", async (req:any, res:any) => {
-        
         let { name, password, password2 } = req.body;
         let errors:any = [];
-
-        // console.log({
-        //     name,
-        //     password,
-        //     password2
-        // })
 
         //validation check
         if (!name || !password || !password2){
@@ -300,13 +309,14 @@ async function main() {
     })
 
     app.post("/users/login", passport.authenticate('local', {
-            successRedirect: "/users/dashboard",
+            successRedirect: "/users/dashboard_01",
             failureRedirect: "/users/login",
             failureFlash: true
         })
     );
 
     app.get('/users/logout', (req:any,res:any) => {
+        console.log("socket closed!")
         req.logOut();
         req.flash('success_msg', "Sie sind abgemeldet");
         res.redirect("/users/login");

@@ -5,8 +5,12 @@ export interface FireFlyDataSend {
     value: string;
 }
 
+// export interface FireFlyDataSend1 {
+//     id: string;
+// }
+
 export interface FireFlyData extends FireFlyDataSend {
-id: string;
+    id: string;
 }
 
   
@@ -24,6 +28,7 @@ export interface FireFlyMessage {
     local: boolean;
     data: FireFlyDataIdentifier[];
 }
+
 
 export interface FireFlyMessageInput {
     data: FireFlyDataSend[];
@@ -80,13 +85,47 @@ export class FireFly {
         this.rest = axios.create({ baseURL: `http://localhost:${port}/api/v1` });
     }
     
-    async sendBroadcast(data: FireFlyDataSend[]) {
+    //Tryout
+    //Will send data to the ff node but will not proadcast or send
+    async sendFile(files: FireFlyDataSend[]) {
+        await this.rest.post(`/namespaces/${this.ns}/data`,);
+    }
+
+
+    //gets the data from the node 
+    async getData(): Promise<FireFlyMessage[]> {
+        const response = await this.rest.get<FireFlyMessage[]>(
+            `/namespaces/${this.ns}/data/${"fb126f33-b5fa-4ada-8c38-e613302b75ef"}`
+        );
+        return response.data;
+    }
+
+    //broadcasts data
+    // async BroadcastData(data: FireFlyDataSend1[]){
+    //     await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
+    // }
+    async broadcastData(data: FireFlyDataSend[]) {
         await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
     }
 
+
+
+
+    //
     async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
-        await this.rest.post(`/namespaces/${this.ns}/send/message`, privateMessage);
+        await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
     }
+
+    async sendBroadcast(data: FireFlyDataSend[]) {
+        await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, { data });
+    }
+
+    async sendBroadcast1(data: FireFlyDataSend[]) {
+        await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
+    }
+
+
+
     
     async getMessages(limit: number): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
