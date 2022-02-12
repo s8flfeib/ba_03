@@ -1,4 +1,4 @@
-import { FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput } from "./firefly";
+import { FireFlyDataSend1, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput } from "./firefly";
 //import express, {Request, Response, NextFunction, response} from 'express';
 const express = require('express');
 const bodyParser = require("body-parser");
@@ -161,7 +161,7 @@ async function main() {
 
         }
         res.redirect("/users/dashboard")
-    })
+    });
 
     app.get("/send_file",  (req: any, res:any) => { 
 
@@ -175,33 +175,79 @@ async function main() {
     //uploade.array('files', x) => x give number of how many files are allowed
     //req.files gives informations
 
-    app.post("/send_file", upload.array('file'), async (req:any, res:any) => {
-        console.log(req.files);
-        console.log("File Uploaded")
+    app.post("/send_file", upload.single('file'), async (req:any, res:any) => {
+        console.log(req.file);
+        console.log("File Uploaded");
+
+        // var f_name = req.file[0].filename;
+        // var f_size = req.file[0].size;
+        
+
+        //That doesnt work cause id, hash is not rightfully created
+        const Send_D1:FireFlyDataSend1[] = [{
+        value: {
+            filename:"sample.pdf",
+            mimetype:"form-data; name=\"file\"; filename=\"-\"",
+            size:13264}
+        }]
+
+        console.log("We dont reach this!")
+
+        //This is the workflow on how to upload, broadcast, retrieve id and get datafromid 
+        //But i dont know how to create a file that i can upload!!!!!!
+        const Send_D:any  = {id:"b2e3e306-68ce-4aea-b427-cfe954442613",
+        validator:"json",
+        namespace:"default",
+        hash:"a6bce30e09165d132d4ef4d65dd1b9184d66570ac4bc4fcb07c1f0980066b9ac",
+        created:"2022-02-12T09:48:14.121862152Z",
+        value:{filename:"I Send Data to all 11:26",mimetype:"form-data; name=\"file\"; filename=\"-\"","size":20131},
+        blob:{hash:"2504a0c5d1e7e2895548939e43473cd36213197f550f02a9ca5ef95a5e4473c8"}
+        }
+
+        await firefly1.uploadData(Send_D)
+        var b: FireFlyDataSend[] = [{value: "b2e3e306-68ce-4aea-b427-cfe954442613" }]
+        await firefly1.sendBroadcast(b);
+
+        //Get all data from BC but not the most recent
+        var t = await firefly3.getData1();
+        var test = JSON.stringify(t)
+        var id = test.split(":")[1].split(",")[0]
+        console.log(test);
+        var hope = await firefly3.getData(id)
+        console.log(hope)
+
+
+        res.redirect("/users/dashboard");
+    });
+
+
+    app.post("/send_file1", upload.array('file'), async (req:any, res:any) => {
+        // console.log(req.files);
+        // console.log("File Uploaded")
 
         
-        var data: FireFlyMessage[];
+        // var data: FireFlyMessage[];
 
-        data = await firefly1.getData();
-        var d = JSON.stringify(data);
-        console.log("Type: " + typeof(d));
-        var datatobroadcast = d.split(":")[1].split(",")[0].slice(1,-1);
+        // //data = await firefly1.getData();
+        // var d = JSON.stringify(data);
+        // console.log("Type: " + typeof(d));
+        // var datatobroadcast = d.split(":")[1].split(",")[0].slice(1,-1);
 
-        var id: FireFlyDataSend[] = [
-            {value: datatobroadcast}
-        ]
+        // var id: FireFlyDataSend[] = [
+        //     {value: datatobroadcast}
+        // ]
 
-        console.log("We got the Data: " + datatobroadcast);
+        // console.log("We got the Data: " + datatobroadcast);
 
-        //1 zu 1 broadcast message
-        await firefly1.broadcastData(id);
+        // //1 zu 1 broadcast message
+        // await firefly1.broadcastData(id);
 
-        var p = await firefly2.getData();
-        console.log(p)
-        console.log("We broadcasted the Data");
+        // //var p = await firefly2.getData();
+        // console.log(p)
+        // console.log("We broadcasted the Data");
 
-        res.send("Single File upload success")
-        // res.redirect("/users/dashboard")
+        // res.send("Single File upload success")
+        // // res.redirect("/users/dashboard")
     });
 
     app.get("/users/dashboard", checkNotAuthenticated, (req:any, res:any) => {

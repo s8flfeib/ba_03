@@ -64,4 +64,14 @@ Fetch:
     // });
 
     //check authentication before moving on to the rest
+    
+    
+    
+    {"id":"fb126f33-b5fa-4ada-8c38e613302b75ef",
+    "validator":"json",
+    "namespace":"default",
+    "hash":"a6bce30e09165d132d4ef4d65dd1b9184d66570ac4bc4fcb07c1f0980066b9ac",
+    "created":"2022-02-11T23:30:50.803946556Z",
+    "value":{"filename":"-","mimetype":"form-data; name=\"file\"; filename=\"-\"","size":20131},"blob":				 {"hash":"2504a0c5d1e7e2895548939e43473cd36213197f550f02a9ca5ef95a5e4473c8"}}
+
 

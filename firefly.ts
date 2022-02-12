@@ -5,9 +5,37 @@ export interface FireFlyDataSend {
     value: string;
 }
 
+export interface FireFlyDataSend1 {
+    value: {
+        filename:string;
+        mimetype: string;
+        size: number;
+    }
+}
+
 // export interface FireFlyDataSend1 {
 //     id: string;
+//     validator: string;
+//     namespace: string;
+//     hash: string;
+//     created: string;
+//     value: {
+//         filename: string;
+//         size: number;
+//     }
+//     blob: {
+//         hash:string;
+//     };
 // }
+
+export interface FireFlyD {
+    filename: string;
+    size: string;
+}
+
+export interface FireFlyBlob {
+    hash: string;
+}
 
 export interface FireFlyData extends FireFlyDataSend {
     id: string;
@@ -93,9 +121,9 @@ export class FireFly {
 
 
     //gets the data from the node 
-    async getData(): Promise<FireFlyMessage[]> {
+    async getData(id: string): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
-            `/namespaces/${this.ns}/data/${"fb126f33-b5fa-4ada-8c38-e613302b75ef"}`
+            `/namespaces/${this.ns}/data/${ id }`
         );
         return response.data;
     }
@@ -108,9 +136,10 @@ export class FireFly {
         await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
     }
 
-
-
-
+    //data: FireFlyDataSend1[]
+    async uploadData(data: any) {
+        await this.rest.post(`/namespaces/${this.ns}/data`, data );
+    }
     //
     async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
         await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
@@ -130,6 +159,12 @@ export class FireFly {
     async getMessages(limit: number): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
           `/namespaces/${this.ns}/messages?limit=${limit}&type=private&type=broadcast`
+        );
+        return response.data;
+    }
+    async getData1(): Promise<FireFlyMessage[]> {
+        const response = await this.rest.get<FireFlyMessage[]>(
+          `/namespaces/${this.ns}/data?limit=1`
         );
         return response.data;
     }
