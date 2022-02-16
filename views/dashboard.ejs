@@ -50,7 +50,7 @@
             </ol>
         </span>
     </p>
-
+    
     <br>
 
     <!--Send Broadcast-->
@@ -74,6 +74,11 @@
         <button type="submit">Upload</button>
     </form>
     <br>
+    <form action="/users/dashboard">
+        <input id="inputFile" type="file" onchange="convertToBase64();" />
+        <!-- <button type="submit">Upload</button> -->
+    </form>
+
 
 
 
@@ -137,6 +142,29 @@
         <input id="input" autocomplete="off" />
         <button>Send</button>
     </form>
+    <script type="text/javascript">
+        function convertToBase64() {
+            //Read File
+            var selectedFile = document.getElementById("inputFile").files;
+            //Check File is not Empty
+            if (selectedFile.length > 0) {
+                // Select the very first file from list
+                var fileToLoad = selectedFile[0];
+                // FileReader function for read the file.
+                var fileReader = new FileReader();
+                var base64;
+                // Onload of file read the file content
+                fileReader.onload = function(fileLoadedEvent) {
+                    base64 = fileLoadedEvent.target.result;
+                    // Print data in console
+                    console.log(base64);
+                };
+                // Convert data to base64
+                var pdf_base64 = fileReader.readAsDataURL(fileToLoad);
+                console.log(pdf_base64);
+            }
+        }
+    </script>
     <!-- Socket.io -->
     <script>
         var socket = io.connect('http://localhost:2000');
@@ -159,10 +187,8 @@
             }
         });
 
-        console.log("HERE!")
         //receive messages from server
         socket.on('chat message received', function(msg) {
-            console.log("We ARE HERE!")
             console.log(msg);
             for(var i of msg){
                 var item = document.createElement('li');

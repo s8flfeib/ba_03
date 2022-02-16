@@ -10,6 +10,7 @@ const passport = require("passport");
 const fetch = require("fetch");
 const socket = require("socket.io");
 const multer = require("multer");
+const pdf2base64 = require("pdf-to-base64");
 
 const initializePassport = require("./passportConfig");
 
@@ -254,8 +255,10 @@ async function main() {
         res.render("dashboard", {user: req.user.name});
     });
 
+    //Set up Socket.io connection to send to the client
+    io.on('connection', newConnection);
 
-    app.get("/users/dashboard_01", checkNotAuthenticated, async (req: any, res:any) => {
+    async function newConnection(socket:any){
         //Load last 25 Messages
         //Get id and Hash of the Messages 
         var allMessages = await firefly1.getMessages(2);
@@ -269,20 +272,18 @@ async function main() {
         //access massages and time
         // console.log(rows[20].data[0].value);
         // console.log(rows[20].message.header.created);
+        console.log("New Socket Connection: " + socket.id);
+        console.log("send rows to client");
+        io.emit('chat message received', rows);
 
-        //Set up Socket.io connection to send to the client
-        io.on('connection', newConnection);
+        socket.on('disconnect', () => {
+            //triggers when closing browser or logout
+            console.log('user disconnected');
+        })
+    }
 
-        function newConnection(socket:any){
-            console.log("New Socket Connection: " + socket.id);
-            console.log("send rows to client");
-            io.emit('chat message received', rows);
+    app.get("/users/dashboard_01", checkNotAuthenticated, async (req: any, res:any) => {
 
-            socket.on('disconnect', () => {
-                //triggers when closing browser or logout
-                console.log('user disconnected');
-            })
-        }
         res.redirect('dashboard');
     })
 
