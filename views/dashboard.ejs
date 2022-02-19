@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8"> 
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Landing Page</title>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
     <!-- <link rel="stylesheet" href="../css/dashboard.css"> -->
@@ -42,24 +43,21 @@
     </form>
 
     <br>
-    <!-- Display last 25 messages -->
+    <!-- Display Messages -->
     <p>
         <span>
             <ol>
                 <li id="listelement"></li><br>
             </ol>
         </span>
-    </p>
-    
-    <br>
+    </p><br>
 
     <!--Send Broadcast-->
     <form action="/send_text" method=GET>
         Nachricht: <input name="message" type="text" id="message" onclick="checkbox()"><br>
         <button type="submit">SUBMIT</button>
-        <!-- <input value="text" type="submit"> -->
-    </form>
-    <br>
+    </form><br>
+
     <!-- Get Messages -->
 
 
@@ -75,76 +73,27 @@
     </form>
     <br>
     <form action="/users/dashboard">
-        <input id="inputFile" type="file" onchange="convertToBase64();" />
-        <!-- <button type="submit">Upload</button> -->
+        <input id="inputFile" type="file"/>
+        <button type="submit" onclick="convertToBase64()">Upload</button>
     </form>
-
-
-
-
 
 
     <br>
     <a href="/users/logout">Logout</a>
 
-
-    <!-- <p>
-        latitude: <span id="latitude"></span>&deg;<br>
-        longitude: <span id="longitude"></span>&deg;<br>
-    
-    </p> -->
-
-    <!-- <script>
-        const response = fetch('/users/dashboard', options);
-        const data = response.json();
-        console.log(data[0])
-    </script> -->
-
-    <!--Some scripts-->
-    <!-- <script>
-        if('geolocation' in navigator) {
-            console.log('geolocation available');
-            //If so get geolocation async function => says get current pos if its ready console log it
-            //get data on client side and send to server using post request fetch
-            navigator.geolocation.getCurrentPosition(async position => {
-                const lat = position.coords.latitude;
-                const long= position.coords.longitude;
-                document.getElementById('latitude').textContent = lat;
-                document.getElementById('longitude').textContent = long;
-
-                //send location inside of an object
-                const data = {lat, long};
-                //a lot of infos you can put into the option webdocs fetch 
-                //body is what i want
-                const options = {
-                    method: 'POST',
-                    //specify data as json data in the header
-                    headers: {
-                        'Content-Type': 'application/json'
-                        
-                    },
-                    body: JSON.stringify(data)
-                }
-                //fetch returns a promis => .then
-                const response = await fetch('/api', options);
-                const json = await response.json();
-                console.log(json);
-            });
-            
-        } else {
-            console.log('geolocation NOT available');
-            //in order to send a post      
-        }
-    </script> -->
     <ul id="messages">
     </ul>
     <form id="form" action="">      
         <input id="input" autocomplete="off" />
-        <button>Send</button>
+        <button id="send">Send</button>
     </form>
+
+
+    <!-- Convert to Base64 Script -->
     <script type="text/javascript">
-        function convertToBase64() {
+        async function convertToBase64() {
             //Read File
+            console.log("We have the pdf");
             var selectedFile = document.getElementById("inputFile").files;
             //Check File is not Empty
             if (selectedFile.length > 0) {
@@ -156,28 +105,37 @@
                 // Onload of file read the file content
                 fileReader.onload = function(fileLoadedEvent) {
                     base64 = fileLoadedEvent.target.result;
-                    // Print data in console
-                    console.log(base64);
                 };
                 // Convert data to base64
                 var pdf_base64 = fileReader.readAsDataURL(fileToLoad);
-                console.log(pdf_base64);
+                //pdf_base64 is our encoded pdf file
+                const data = { pdf_base64 };
+                const options = {
+                    method: 'POST',
+                    //specify data as json data in the header
+                    headers: {
+                        'Content-Type': 'application/json'   
+                    },
+                    body: JSON.stringify(data)
+                }
+                //fetch returns a promis => .then
+                fetch('/send_file1', options);
+                //const json = await response.json();
+                //console.log(json);
+            } else {
+                console.log("File not valid!")
             }
         }
     </script>
-    <!-- Socket.io -->
+
+    <!-- Socket.io Script -->
     <script>
         var socket = io.connect('http://localhost:2000');
-
         var messages = document.getElementById('messages');
-
         var form = document.getElementById('form');
         console.log(form);
         var input = document.getElementById('input');
         console.log(input)
-
-
-        
         //send messages to server
         form.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -186,7 +144,6 @@
                 input.value = '';
             }
         });
-
         //receive messages from server
         socket.on('chat message received', function(msg) {
             console.log(msg);
@@ -200,13 +157,9 @@
                 messages.appendChild(item);
                 messages.appendChild(time);
                 messages.appendChild(author);
-            }
-
-            
+            }           
             window.scrollTo(0, document.body.scrollHeight);
         });
-
-
         //send data from client to server: need jsobject with data and give it a name 
         // console.log('Sending');
         // var data = {
@@ -214,7 +167,6 @@
         //     b: "Data"
         // }
         // socket.emit('message', data);
-
     </script>
     
 

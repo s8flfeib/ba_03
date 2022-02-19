@@ -1,4 +1,5 @@
 import { FireFlyDataSend1, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput } from "./firefly";
+
 //import express, {Request, Response, NextFunction, response} from 'express';
 const express = require('express');
 const bodyParser = require("body-parser");
@@ -9,9 +10,7 @@ const flash = require("express-flash");
 const passport = require("passport");
 const fetch = require("fetch");
 const socket = require("socket.io");
-const multer = require("multer");
 const pdf2base64 = require("pdf-to-base64");
-
 const initializePassport = require("./passportConfig");
 
 initializePassport(passport);
@@ -20,23 +19,13 @@ const PORT = process.env.PORT || 2000
 
 const app = express();
 
+
+//Socket.io => change to Webstocket
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
 
 const io = socket(server);
-
-//multer setup
-const fileStorageEngine = multer.diskStorage({
-    destination: (req:any, file:any, cb:any) => {
-        cb(null, "./uploads");
-    },
-    filename: (req:any, file:any, cb:any) => {
-        cb(null, Date.now() + "--" + file.originalname);
-    }
-});
-
-const upload = multer({storage: fileStorageEngine});
 
 
 //import { newMessage } from "./public/scripts/script01";
@@ -176,7 +165,7 @@ async function main() {
     //uploade.array('files', x) => x give number of how many files are allowed
     //req.files gives informations
 
-    app.post("/send_file", upload.single('file'), async (req:any, res:any) => {
+    app.post("/send_file", async (req:any, res:any) => {
         console.log(req.file);
         console.log("File Uploaded");
 
@@ -222,33 +211,10 @@ async function main() {
     });
 
 
-    app.post("/send_file1", upload.array('file'), async (req:any, res:any) => {
-        // console.log(req.files);
-        // console.log("File Uploaded")
-
-        
-        // var data: FireFlyMessage[];
-
-        // //data = await firefly1.getData();
-        // var d = JSON.stringify(data);
-        // console.log("Type: " + typeof(d));
-        // var datatobroadcast = d.split(":")[1].split(",")[0].slice(1,-1);
-
-        // var id: FireFlyDataSend[] = [
-        //     {value: datatobroadcast}
-        // ]
-
-        // console.log("We got the Data: " + datatobroadcast);
-
-        // //1 zu 1 broadcast message
-        // await firefly1.broadcastData(id);
-
-        // //var p = await firefly2.getData();
-        // console.log(p)
-        // console.log("We broadcasted the Data");
-
-        // res.send("Single File upload success")
-        // // res.redirect("/users/dashboard")
+    app.post("/send_file1", (req:any, res:any) => {
+        console.log("We are here");
+        console.log(req)
+        res.redirect("/users/dashboard");
     });
 
     app.get("/users/dashboard", checkNotAuthenticated, (req:any, res:any) => {
@@ -261,12 +227,13 @@ async function main() {
     async function newConnection(socket:any){
         //Load last 25 Messages
         //Get id and Hash of the Messages 
-        var allMessages = await firefly1.getMessages(2);
+        // !!!!!!!ONLY FIREFLY1 /////////////
+        var allMessages = await firefly2.getMessages(5);
         //console.log(response);
         const rows: MessageRow[] = [];
         //push all 25 messages to MessageRow{message: FireFlyMessage, data:FireFlyData[]}
         for(const message of allMessages) {
-            var message_data = await firefly1.retrieveData(message.data)
+            var message_data = await firefly2.retrieveData(message.data)
             rows.push({message: message, data: message_data})
         }
         //access massages and time
