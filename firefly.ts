@@ -8,25 +8,24 @@ export interface FireFlyDataSend {
 export interface FireFlyDataSend1 {
     value: {
         filename:string;
-        mimetype: string;
         size: number;
     }
 }
 
-// export interface FireFlyDataSend1 {
-//     id: string;
-//     validator: string;
-//     namespace: string;
-//     hash: string;
-//     created: string;
-//     value: {
-//         filename: string;
-//         size: number;
-//     }
-//     blob: {
-//         hash:string;
-//     };
-// }
+export interface FireFlyDataSend1 {
+    id: string;
+    validator: string;
+    namespace: string;
+    hash: string;
+    created: string;
+    value: {
+        filename: string;
+        size: number;
+    }
+    blob: {
+        hash:string;
+    };
+}
 
 export interface FireFlyD {
     filename: string;
@@ -119,7 +118,10 @@ export class FireFly {
     async sendBroadcast(data: FireFlyDataSend[]) {
         await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, { data });
     }
-
+    //Send private Message
+    async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
+        await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
+    }
     //Get Messages
     async getMessages(limit: number): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
@@ -132,6 +134,11 @@ export class FireFly {
         this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
         .then(response => response.data)));
     }
+    ///
+    async postData(data: any[]) {
+        await this.rest.post(`/namespaces/${this.ns}/data`, data);
+    }
+
 
 
 
@@ -139,9 +146,7 @@ export class FireFly {
 
     //Tryout
 
-    async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
-        await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
-    }
+
 
 
 

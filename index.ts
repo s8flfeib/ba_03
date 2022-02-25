@@ -196,62 +196,83 @@ async function main() {
         res.redirect("/users/dashboard")
     });
 
-    //Send and sage pdf from client to server
-    //file is the name of the input 
-    //uploade.single('file') for single file
-    //req.file gives information
-    //uploade.array('files', x) => x give number of how many files are allowed
-    //req.files gives informations
-
     app.post("/send_file", async (req:any, res:any) => {
-        console.log(req.file);
-        console.log("File Uploaded");
+        // console.log(req.file);
+        // console.log("File Uploaded");
 
-        // var f_name = req.file[0].filename;
-        // var f_size = req.file[0].size;
+        // // var f_name = req.file[0].filename;
+        // // var f_size = req.file[0].size;
         
 
-        //That doesnt work cause id, hash is not rightfully created
-        const Send_D1:FireFlyDataSend1[] = [{
-        value: {
-            filename:"sample.pdf",
-            mimetype:"form-data; name=\"file\"; filename=\"-\"",
-            size:13264}
-        }]
+        // //That doesnt work cause id, hash is not rightfully created
+        // const Send_D1:FireFlyDataSend1[] = [{
+        // value: {
+        //     filename:"sample.pdf",
+        //     mimetype:"form-data; name=\"file\"; filename=\"-\"",
+        //     size:13264}
+        // }]
 
-        console.log("We dont reach this!")
+        // console.log("We dont reach this!")
 
-        //This is the workflow on how to upload, broadcast, retrieve id and get datafromid 
-        //But i dont know how to create a file that i can upload!!!!!!
-        const Send_D:any  = {id:"b2e3e306-68ce-4aea-b427-cfe954442613",
-        validator:"json",
-        namespace:"default",
-        hash:"a6bce30e09165d132d4ef4d65dd1b9184d66570ac4bc4fcb07c1f0980066b9ac",
-        created:"2022-02-12T09:48:14.121862152Z",
-        value:{filename:"I Send Data to all 11:26",mimetype:"form-data; name=\"file\"; filename=\"-\"","size":20131},
-        blob:{hash:"2504a0c5d1e7e2895548939e43473cd36213197f550f02a9ca5ef95a5e4473c8"}
-        }
+        // //This is the workflow on how to upload, broadcast, retrieve id and get datafromid 
+        // //But i dont know how to create a file that i can upload!!!!!!
+        // const Send_D:any  = {id:"b2e3e306-68ce-4aea-b427-cfe954442613",
+        // validator:"json",
+        // namespace:"default",
+        // hash:"a6bce30e09165d132d4ef4d65dd1b9184d66570ac4bc4fcb07c1f0980066b9ac",
+        // created:"2022-02-12T09:48:14.121862152Z",
+        // value:{filename:"I Send Data to all 11:26",mimetype:"form-data; name=\"file\"; filename=\"-\"","size":20131},
+        // blob:{hash:"2504a0c5d1e7e2895548939e43473cd36213197f550f02a9ca5ef95a5e4473c8"}
+        // }
 
-        await firefly1.uploadData(Send_D)
-        var b: FireFlyDataSend[] = [{value: "b2e3e306-68ce-4aea-b427-cfe954442613" }]
-        await firefly1.sendBroadcast(b);
+        // await firefly1.uploadData(Send_D)
+        // var b: FireFlyDataSend[] = [{value: "b2e3e306-68ce-4aea-b427-cfe954442613" }]
+        // await firefly1.sendBroadcast(b);
 
-        //Get all data from BC but not the most recent
-        var t = await firefly3.getData1();
-        var test = JSON.stringify(t)
-        var id = test.split(":")[1].split(",")[0]
-        console.log(test);
-        var hope = await firefly3.getData(id)
-        console.log(hope)
+        // //Get all data from BC but not the most recent
+        // var t = await firefly3.getData1();
+        // var test = JSON.stringify(t)
+        // var id = test.split(":")[1].split(",")[0]
+        // console.log(test);
+        // var hope = await firefly3.getData(id)
+        // console.log(hope)
 
 
-        res.redirect("/users/dashboard");
+        // res.redirect("/users/dashboard");
     });
 
 
     app.post("/send_file1", (req:any, res:any) => {
         console.log("We are here");
-        console.log(req)
+        const pdf_base64 = req.body.base64;
+
+        // const data:FireFlyDataSend[] = [
+        //     {value: pdf_base64}
+        // ]; 
+
+        const test:FireFlyDataSend1[] =[ {
+            // A uniquely generated ID, we can refer to when sending this data to other parties
+            id: "97eb750f-0d0b-4c1d-9e37-1e92d1a22bb8",
+            validator: "json", // the "value" part is JSON
+            namespace: "default", // from the URL
+            // The hash is a combination of the hash of the "value" metadata, and the
+            // hash of the blob
+            hash: "997af6a9a19f06cc8a46872617b8bf974b106f744b2e407e94cc6959aa8cf0b8",
+            created: "2021-07-01T20:20:35.5462306Z",
+            value: {
+              filename: "-", // dash is how curl represents the filename for stdin
+              size: 31185 // the size of the blob data
+            },
+            blob: {
+              // A hash reference to the blob
+              hash: "86e6b39b04b605dd1b03f70932976775962509d29ae1ad2628e684faabe48136"
+            }
+          }]
+
+        firefly1.postData(test);
+
+
+
         res.redirect("/users/dashboard");
     });
 
