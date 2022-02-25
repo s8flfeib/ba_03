@@ -20,45 +20,54 @@
     <!-- Send messages to the blockchain -->
     <h4>Senden Sie eine Nachricht</h4>
 
-    <!--Private Message option-->
-    <!-- <div class="options">
-        <ul>
-            <li>
-                Steuerberater <input type="checkbox">
-            </li>
-            <li>
-                Finanzamt <input type="checkbox">
-            </li>
-            <li>
-                Mandant <input type="checkbox">
-            </li>
-        </ul>
-    </div> -->
+
     <h4>Private Message </h4>
+
+    <!--Send Message-->
     <form action="/send_text" method=POST>
-        <label class="switch">
-            <input type="checkbox">
-            <span class="slider"></span>
-        </label>
-    </form>
-
-    <br>
-    <!-- Display Messages -->
-    <p>
-        <span>
-            <ol>
-                <li id="listelement"></li><br>
-            </ol>
-        </span>
-    </p><br>
-
-    <!--Send Broadcast-->
-    <form action="/send_text" method=GET>
-        Nachricht: <input name="message" type="text" id="message" onclick="checkbox()"><br>
+        <label for="recipient">Empfänger</label>
+        <!-- Add multiple to allow multiple selections -->
+        <select name="recipient" id="res" size="5" >
+            <optgroup label="Send to">
+                <option value="Broadcast" selected>An alle</option>
+                <option value="Mandant">Mandant</option>
+                <option value="Berater">Berater</option>
+                <option value="Finanzamt">Finanzamt</option>
+            </optgroup>
+        </select>
+        <br>
+        Nachricht: <input name="message" type="text" id="message"><br>
         <button type="submit">SUBMIT</button>
     </form><br>
 
-    <!-- Get Messages -->
+    <br>
+
+    <!-- Handle recipiants selection -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document
+            .getElementById("res")
+            .addEventListener('input', handleSelect);
+            //takes place every time the user selects something new
+            // .getEventListener('input', handleSelect)
+        });
+
+        function handleSelect(ev) {
+            let select = ev.target.value; //document.getElementbyId('res')
+            console.log(select);
+            //Below handels multiple selections
+            // let choices=[];
+            // for(let i=0;i<select.selectedOptions.length; i++){
+            //     choices.push(select.selectedOptions[i].value);
+            // }
+            //same as above
+            //choices = [].map.call(select.selectedOptions, (option)=>option.value);)
+            //console.log(choices);
+        }
+    </script>
+
+
+    <!-- Display Messages -->
 
 
 
@@ -87,6 +96,7 @@
         <input id="input" autocomplete="off" />
         <button id="send">Send</button>
     </form>
+
 
 
     <!-- Convert to Base64 Script -->

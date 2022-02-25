@@ -39,6 +39,7 @@ interface MessageRow {
     data: FireFlyData[];
 }
 
+
 //const dataValues = (data: FireFlyData[]) => data.map( d => d.value);
 //const express = require( "express" );
 import * as path from 'path'
@@ -69,92 +70,129 @@ app.use(passport.session());
 
 app.use(flash());
 
-
 async function main() {
-
-    console.log('test')
+    //Create FireFly and FireFlyListener Objects
+    //A FireFly Object allows to send and receive Data
+    //The FireFlyListener create socket connection to the api
     const firefly1 = new FireFly(5000);
     const ws1 = new FireFlyListener(5000);
     const firefly2 = new FireFly(5001);
     const ws2 = new FireFlyListener(5001);
     const firefly3 = new FireFly(5002);
     const ws3 = new FireFlyListener(5002);
-    
-    
+      
     await ws1.ready();
     await ws2.ready();
     await ws3.ready();
 
 
-
-    //Start Index:
+    //Start Index allows user to login or register:
     app.get("/", (req: any, res:any) => {
-        res.render('index', {user: "Flo"});
-        //console.log(req.body)
-
+        res.render('index', {user: "User"});
     })
 
-    app.get("/send_text", checkNotAuthenticated, (req:any, res:any) => {
-        const message = JSON.stringify(req.query).split('"')[3];
-        console.log("MESSAGE: " + message);
-        // console.log(x)
-        // console.log(req.query);
-        //let text = req.query;
-        //console.log(typeof(text));
+    //Send private Message and Broadcast between all Members!
+    app.post("/send_text", (req:any, res:any) => {
+        const message = JSON.stringify(req.body.message);
         const sendData: FireFlyDataSend[] = [
             {value: message}
         ]
-        
+        var recipient = req.body.recipient;
         const recipients: FireFlyMemberInput[] = [];
 
-        console.log(req.body);
-
-        //var isPrivate = 1;
-        var isPrivate = 0;
-
-        if(isPrivate) {
-            //private message
-            //FireFly_ORGS_IDs:
-            // -0x1f0ee3b0210f0ce8f818376a001c152bf13a5436
-            // -0xa73905518f8f267e598ff920c203663531bb680b
-            // -0x891e51c19bc64dc06fd98ae89dfea7603b047b75
-            //recipients.push({identity: "0xa73905518f8f267e598ff920c203663531bb680b"});
-            //recipients.push({identity: "0x1f0ee3b0210f0ce8f818376a001c152bf13a5436"});
-
-            //org2
-            recipients.push({identity: "0x891e51c19bc64dc06fd98ae89dfea7603b047b75"});
-
-            //ff1 is org0
-            firefly1.sendPrivate({
-                data: [
-                    {
-                        value: message,
-                    },
-                    ],
-                    group: {
-                    members: recipients,
-                    },
-            });
-        }else{
-        //broadcast wo ist der unterschied ob ff1, ff2 oder ff3
-            switch(req.user.name) {
-                case "Mandant":
-                    console.log("Send from M");
-                    firefly1.sendBroadcast(sendData); 
-                case "Steuerberater":
-                    console.log("Send from S");
-                    firefly2.sendBroadcast(sendData); 
-                case "Finanzamt":
-                    console.log("Send from F");
-                    firefly3.sendBroadcast(sendData); 
-            }
-
+        switch(recipient) {
+            case "Broadcast":
+                console.log("Broadcast")
+                switch(req.user.name) {
+                    case "Mandant":
+                        console.log("Send from M");
+                        firefly1.sendBroadcast(sendData); 
+                        break;
+                    case "Steuerberater":
+                        console.log("Send from S");
+                        firefly2.sendBroadcast(sendData); 
+                        break;
+                    case "Finanzamt":
+                        console.log("Send from F");
+                        firefly3.sendBroadcast(sendData); 
+                        break;
+                }
+                break;
+            case "Mandant":
+                recipients.push({identity: "org_0"});
+                switch(req.user.name){
+                    case "Mandant":
+                        firefly1.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                    case "Steuerberater":
+                        firefly2.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                    case "Finanzamt":
+                        firefly3.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                }  
+                break;
+            case "Berater":
+                recipients.push({identity: "org_1"});
+                switch(req.user.name){
+                    case "Mandant":
+                        firefly1.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                    case "Steuerberater":
+                        firefly2.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                    case "Finanzamt":
+                        firefly3.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                }
+                break;
+            case "Finanzamt":
+                recipients.push({identity: "org_2"});
+                switch(req.user.name){
+                    case "Mandant":
+                        firefly1.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                    case "Steuerberater":
+                        firefly2.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                    case "Finanzamt":
+                        firefly3.sendPrivate({
+                            data: [{value: message,},],
+                                group: {members: recipients,},
+                        });
+                        break;
+                }
+                break;
         }
-        res.redirect("/users/dashboard")
+
+        res.redirect("/users/dashboard");
     });
 
     app.get("/send_file",  (req: any, res:any) => { 
-
         res.redirect("/users/dashboard")
     });
 
@@ -353,6 +391,39 @@ async function main() {
         res.redirect("/users/login");
     }
 
+    function paginatedResults(model:any) {
+        return (req:any, res:any, next:any) => {
+            const page = parseInt(req.query.page);
+            const limit = parseInt(req.query.limit);
+        
+            const startIndex = (page -1) * limit;
+            const endINdex = page * limit;
+        
+            const results = {} as any
+        
+            if(endINdex < model.length) {
+                results.next = {
+                    page: page + 1, 
+                    limit: limit
+                }
+            }
+        
+        
+            if(startIndex > 0){
+                results.previous = {
+                    page: page - 1, 
+                    limit: limit
+                }
+                    
+            }
+        
+            results.RESULTS = model.slice(startIndex, endINdex);
+    
+            //pass it to the results
+            res.paginatedResults = results;
+            next()
+        }
+    }
 
     
     

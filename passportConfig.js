@@ -21,7 +21,7 @@ function initialize(passport){
 
                     const user = results.rows[0];
 
-                    bcrypt.compare(password, user.password, (err, ismatch) =>{
+                    bcrypt.compare(password, user.password, async (err, ismatch) =>{
 
                         if(err){
                             throw err;
@@ -30,7 +30,7 @@ function initialize(passport){
                             if(ismatch){
                                 return done(null, user)         // null = no error   gibt user zurück 
                             }else{
-                                return done(null ,false ,{message: "Passwort ist nicht korrekt!" });
+                                return done(null ,false ,{message: "Passwort ist nicht korrekt!"});
                             }
 
 

@@ -113,7 +113,38 @@ export class FireFly {
         this.rest = axios.create({ baseURL: `http://localhost:${port}/api/v1` });
     }
     
+    //Funktionierende Funktionen
+
+    //Send Braodcast
+    async sendBroadcast(data: FireFlyDataSend[]) {
+        await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, { data });
+    }
+
+    //Get Messages
+    async getMessages(limit: number): Promise<FireFlyMessage[]> {
+        const response = await this.rest.get<FireFlyMessage[]>(
+          `/namespaces/${this.ns}/messages?limit=${limit}&type=private&type=broadcast`
+        );
+        return response.data;
+    }
+    retrieveData(data: FireFlyDataIdentifier[]) {
+        return Promise.all(data.map(d =>
+        this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
+        .then(response => response.data)));
+    }
+
+
+
+
+
     //Tryout
+
+    async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
+        await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
+    }
+
+
+
     //Will send data to the ff node but will not proadcast or send
     async sendFile(files: FireFlyDataSend[]) {
         await this.rest.post(`/namespaces/${this.ns}/data`,);
@@ -141,27 +172,11 @@ export class FireFly {
         await this.rest.post(`/namespaces/${this.ns}/data`, data );
     }
     //
-    async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
-        await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
-    }
-
-    async sendBroadcast(data: FireFlyDataSend[]) {
-        await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, { data });
-    }
-
-    async sendBroadcast1(data: FireFlyDataSend[]) {
-        await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
-    }
 
 
 
     
-    async getMessages(limit: number): Promise<FireFlyMessage[]> {
-        const response = await this.rest.get<FireFlyMessage[]>(
-          `/namespaces/${this.ns}/messages?limit=${limit}&type=private&type=broadcast`
-        );
-        return response.data;
-    }
+
     async getData1(): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
           `/namespaces/${this.ns}/data?limit=1`
@@ -170,10 +185,6 @@ export class FireFly {
     }
 
 
-    retrieveData(data: FireFlyDataIdentifier[]) {
-        return Promise.all(data.map(d =>
-        this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
-        .then(response => response.data)));
-    }
+
 }
       
