@@ -1,8 +1,7 @@
-import { FireFlyDataSend1, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput } from "./firefly";
+import { FireFlyDataSend1, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput, PDF_Data } from "./firefly";
 
 //import express, {Request, Response, NextFunction, response} from 'express';
 const express = require('express');
-const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 const { pool} = require("./dbConfig");
 const session = require("express-session");
@@ -12,6 +11,20 @@ const fetch = require("fetch");
 const socket = require("socket.io");
 const pdf2base64 = require("pdf-to-base64");
 const initializePassport = require("./passportConfig");
+const FormData = require('form-data');
+const fs = require('fs');
+const multiparty = require('multiparty')
+
+
+//file upload
+const fileUpload = require('express-fileupload');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const _ = require('lodash');
+import fetch1 from 'node-fetch';
+import http from 'node:http';
+
 
 initializePassport(passport);
 
@@ -44,12 +57,20 @@ interface MessageRow {
 //const express = require( "express" );
 import * as path from 'path'
 import { convertToObject, ExitStatus, isNamedExportBindings, setConstantValue } from "typescript";
+import axios from "axios";
 //var path = require('path')
 //app.use(express.static('public'))
 app.use(express.static(path.join(__dirname, '../public')));
 
-//set middleware
-app.use(bodyParser.urlencoded({ extended: false }));
+//enable file upload
+app.use(fileUpload({createParentPath:true}))
+
+//add other middleware
+app.use(cors());
+app.use(morgan('dev'));
+
+//set middleware ==> changed to "true" from flase
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 //app.ust(express.json({ limit: '1mb })); helps to protect server from huge data
 
@@ -86,9 +107,40 @@ async function main() {
     await ws3.ready();
 
 
+    app.post('/upload-file', async(req:any,res:any) => {
+        //console.log(req.files.file)
+        var data = req.files.file
+
+        console.log(data.data)
+
+        var fd = new FormData();
+        fd.append("name", data.name)
+        fd.append("size", data.size)
+        fd.append("autometa", true)
+        fd.append("data", data.data)
+
+        var formData = new FormData();
+        //formData.append('file', fs.createReadStream('./sample.pdf'))
+        //formData.append('file', data.data)
+        formData.append('file', data.data, { filename : 'document.pdf' });
+        console.log(formData)
+        var file = formData
+        console.log(typeof(file))
+
+        const respo = await axios.post('http://localhost:5000/api/v1/namespaces/default/data', formData
+        
+        , {
+            headers: formData.getHeaders()
+        })
+        .catch(err => console.log(err))
+
+        res.redirect('/')
+    })
+
     //Start Index allows user to login or register:
     app.get("/", (req: any, res:any) => {
-        res.render('index', {user: "User"});
+        res.render('test')
+        //res.render('index', {user: "User"});
     })
 
     //Send private Message and Broadcast between all Members!
@@ -192,84 +244,51 @@ async function main() {
         res.redirect("/users/dashboard");
     });
 
+            // const data:FireFlyDataSend1 = {
+        //     blob:{
+        //         hash:"",
+        //         name:"",
+        //         public:"",
+        //         size: 0
+        //     },
+        //     datatype: {
+        //         name:"",
+        //         version:""
+        //     },
+        //     hash:"",
+        //     id:"",
+        //     validator:"",
+        //     value: pdf_base64
+        // }; 
+
     app.get("/send_file",  (req: any, res:any) => { 
         res.redirect("/users/dashboard")
     });
+    app.post("/send_file", (req:any, res:any) => {
+        console.log("We are here");
+        //const pdf_binary = req.body.base64;
+        console.log(req)
 
-    app.post("/send_file", async (req:any, res:any) => {
-        // console.log(req.file);
-        // console.log("File Uploaded");
-
-        // // var f_name = req.file[0].filename;
-        // // var f_size = req.file[0].size;
-        
-
-        // //That doesnt work cause id, hash is not rightfully created
-        // const Send_D1:FireFlyDataSend1[] = [{
-        // value: {
-        //     filename:"sample.pdf",
-        //     mimetype:"form-data; name=\"file\"; filename=\"-\"",
-        //     size:13264}
-        // }]
-
-        // console.log("We dont reach this!")
-
-        // //This is the workflow on how to upload, broadcast, retrieve id and get datafromid 
-        // //But i dont know how to create a file that i can upload!!!!!!
-        // const Send_D:any  = {id:"b2e3e306-68ce-4aea-b427-cfe954442613",
-        // validator:"json",
-        // namespace:"default",
-        // hash:"a6bce30e09165d132d4ef4d65dd1b9184d66570ac4bc4fcb07c1f0980066b9ac",
-        // created:"2022-02-12T09:48:14.121862152Z",
-        // value:{filename:"I Send Data to all 11:26",mimetype:"form-data; name=\"file\"; filename=\"-\"","size":20131},
-        // blob:{hash:"2504a0c5d1e7e2895548939e43473cd36213197f550f02a9ca5ef95a5e4473c8"}
+        // const data:PDF_Data = {
+        //     blob:{
+        //         name : "Blob Name",
+        //         public: pdf_binary,
+        //         size : pdf_binary.fileSize
+        //     },
+        //     value:{
+        //         filename:"-",
+        //         mimetype:"form-data; name=\"file\"; filename=\"-\""
+        //     }
         // }
 
-        // await firefly1.uploadData(Send_D)
-        // var b: FireFlyDataSend[] = [{value: "b2e3e306-68ce-4aea-b427-cfe954442613" }]
-        // await firefly1.sendBroadcast(b);
 
-        // //Get all data from BC but not the most recent
-        // var t = await firefly3.getData1();
-        // var test = JSON.stringify(t)
-        // var id = test.split(":")[1].split(",")[0]
-        // console.log(test);
-        // var hope = await firefly3.getData(id)
-        // console.log(hope)
+        // const data = new FormData();
+        // data.append('autometa', "true");
+        // data.append('file', pdf_binary);
+        // formData.append('filename.ext', fs.createReadStream("sample.pdf"));
 
 
-        // res.redirect("/users/dashboard");
-    });
-
-
-    app.post("/send_file1", (req:any, res:any) => {
-        console.log("We are here");
-        const pdf_base64 = req.body.base64;
-
-        // const data:FireFlyDataSend[] = [
-        //     {value: pdf_base64}
-        // ]; 
-
-        const test:FireFlyDataSend1[] =[ {
-            // A uniquely generated ID, we can refer to when sending this data to other parties
-            id: "97eb750f-0d0b-4c1d-9e37-1e92d1a22bb8",
-            validator: "json", // the "value" part is JSON
-            namespace: "default", // from the URL
-            // The hash is a combination of the hash of the "value" metadata, and the
-            // hash of the blob
-            hash: "997af6a9a19f06cc8a46872617b8bf974b106f744b2e407e94cc6959aa8cf0b8",
-            created: "2021-07-01T20:20:35.5462306Z",
-            value: {
-              filename: "-", // dash is how curl represents the filename for stdin
-              size: 31185 // the size of the blob data
-            },
-            blob: {
-              // A hash reference to the blob
-              hash: "86e6b39b04b605dd1b03f70932976775962509d29ae1ad2628e684faabe48136"
-            }
-          }]
-
-        firefly1.postData(test);
+//        firefly1.postData(data);
 
 
 
@@ -281,18 +300,20 @@ async function main() {
     });
 
     //Set up Socket.io connection to send to the client
+    //Auf jeden einzelnen Client zuschneiden !!
     io.on('connection', newConnection);
 
     async function newConnection(socket:any){
         //Load last 25 Messages
         //Get id and Hash of the Messages 
         // !!!!!!!ONLY FIREFLY1 /////////////
-        var allMessages = await firefly2.getMessages(5);
+        var allMessages = await firefly1.getAllMessages();
         //console.log(response);
         const rows: MessageRow[] = [];
         //push all 25 messages to MessageRow{message: FireFlyMessage, data:FireFlyData[]}
         for(const message of allMessages) {
-            var message_data = await firefly2.retrieveData(message.data)
+            var message_data = await firefly1.retrieveData(message.data)
+            // console.log(message.data)
             rows.push({message: message, data: message_data})
         }
         //access massages and time

@@ -73,17 +73,11 @@
     <!-- Send Files to the Blockchain -->
     <!-- direkt hinter file kann noch multiple gestellt werde -->
     <h4>Senden Sie ihre Dokumente</h4>
-    <form action="/send_file" method="POST" enctype=multipart/form-data >
-        <label for="document">Dokumente: </label> 
-        <input name="file" type="file" multiple="" id="file"/><br>
-        <button type="submit">Upload</button>
-    </form>
-    <br>
-
-
-    <form>
+    <form class="form" id="myForm">
         <input id="inputFile" type="file"/>
-        <button type="submit" onclick="convertToBase64()">Upload</button>
+        <button type="submit" onclick="convertToBase64()">Upload base64</button>
+        <!-- <button type="submit" onclick="sendbinary()"> Upload binary </button> -->
+        <button type="submit">Submit</button>
     </form>
 
 
@@ -97,41 +91,118 @@
         <button id="send">Send</button>
     </form>
 
+    <script>
+        const myForm = document.getElementById('myForm');
+
+        myForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+
+            var selectedFile = document.getElementById("inputFile").files[0];
+            console.log(selectedFile)
+
+            // formData.append('name', selectedFile.name),
+            // formData.append('size', selectedFile.size),
+            formData.append('file', selectedFile)
+            
+
+            fetch('http://localhost:5000/api/v1/namespace/default/data', {
+            method:"POST",
+            headers: {"Content-Type": undefined},
+            body: formData
+            }).then(function(res) {
+                return res.text();
+            }).then(function (text) {
+                console.log(text)
+            }).catch(function(err){
+                console.log(err)
+            })
+
+        })
+    </script>
+
+
+
+
+    <script type="text/javascript">
+        function sendbinary(){
+            var selectedFile = document.getElementById("inputFile").files;
+            var fileToLoad = selectedFile[0]
+            if (selectedFile.length > 0) {
+
+                var formData = new FormData();
+                formData.append("name", fileToLoad.name);
+                formData.append("size", fileToLoad.size);
+                formData.append("file", fileToLoad);
+
+
+
+                var options = {
+                    method: 'POST',
+                    //specify data as json data in the header
+                    headers: {
+                        'Content-Type': 'multipart/form-data'   
+                    },
+                    body: JSON.stringify(formData),
+                };
+                console.log("SEND FORMDATA: " + formData)
+                //use fetch to send data
+                fetch('http://localhost:5000/api/v1/namespace/default/data', {method: "POST", body:"a=1"})
+                .catch(err => console.log(err))
+            }
+        }
+    </script>
+
+
 
 
     <!-- Convert to Base64 Script -->
     <script type="text/javascript">
-        function convertToBase64() {
+        async function convertToBase64() {
             //Read File
             var selectedFile = document.getElementById("inputFile").files;
             //Check File is not Empty
             if (selectedFile.length > 0) {
                 // Select the very first file from list
                 var fileToLoad = selectedFile[0];
+                console.log(fileToLoad)
                 // FileReader function for read the file.
                 var fileReader = new FileReader();
                 var base64;
                 // Onload of file read the file content
-                fileReader.onload = function(fileLoadedEvent) {
+                console.log("STOPS HERE")
+                fileReader.onload = await function(fileLoadedEvent) {
                     base64 = fileLoadedEvent.target.result;
 
-                    const data = { base64 };
+                    // const data = { base64 };
 
-                    console.log(data)
+                    console.log("NOT:" + base64)
+
+
+                    var formData = new FormData();
+                    // formData.append("name", fileToLoad.name);
+                    // formData.append("size", fileToLoad.size);
+                    formData.append("filename.ext", base64);
+
+                    console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
                     const options = {
                     method: 'POST',
                     //specify data as json data in the header
                     headers: {
-                        'Content-Type': 'application/json'   
+                        'Content-Type': 'multipart/form-data'   
                     },
-                    body: JSON.stringify(data),
+                    body: formData,
                     }
                     //use fetch to send data
-                    fetch('/send_file1', options);
+                    console.log("POST DATA WIHT FETCHI TO API")
+                    fetch('http://localhost:5000/api/v1/namespace/default/data', options);
                 };
                 //This executes before the function above 
-                var pdf_base64 = fileReader.readAsDataURL(fileToLoad);              
+                //var pdf_base64 = fileReader.readAsDataURL(fileToLoad);    
+                //try binary
+                var pdf_base64 = fileReader.readAsBinaryString(fileToLoad);   
             } else {
                 console.log("File not valid!")
             }
@@ -161,7 +232,8 @@
             messages.innerHTML = "";
             for(var i of msg){
                 var item = document.createElement('li');
-                item.textContent = i.data[0].value.slice(1,-1);
+                //.slice(1,-1);
+                item.textContent = i.data[0].value;
                 var time = document.createElement('li');
                 time.textContent = i.message.header.created;
                 //var author = document.createElement('li');

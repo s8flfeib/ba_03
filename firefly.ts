@@ -5,26 +5,41 @@ export interface FireFlyDataSend {
     value: string;
 }
 
-export interface FireFlyDataSend1 {
-    value: {
-        filename:string;
-        size: number;
+export interface PDF_Data {
+    blob: {
+        name:string,
+        public:string,
+        size: number
+    },
+    value:{
+        filename:string,
+        mimetype:string
     }
+
 }
 
+// export interface FireFlyDataSend1 {
+//     value: {
+//         filename:string;
+//         size: number;
+//     }
+// }
+
 export interface FireFlyDataSend1 {
-    id: string;
-    validator: string;
-    namespace: string;
-    hash: string;
-    created: string;
-    value: {
-        filename: string;
-        size: number;
-    }
     blob: {
         hash:string;
-    };
+        name:string;
+        public:string;
+        size:number;
+    }
+    datatype: {
+        name:string;
+        version:string;
+    }
+    hash:string;
+    id:string;
+    validator:string;
+    value:string;
 }
 
 export interface FireFlyD {
@@ -122,10 +137,17 @@ export class FireFly {
     async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
         await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
     }
-    //Get Messages
+    //Get Messages Limit Broadcast & Private
     async getMessages(limit: number): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
           `/namespaces/${this.ns}/messages?limit=${limit}&type=private&type=broadcast`
+        );
+        return response.data;
+    }
+    //Get All Messages Ohne types bekommt man nur 10 Messages
+    async getAllMessages(): Promise<FireFlyMessage[]> {
+        const response = await this.rest.get<FireFlyMessage[]>(
+          `/namespaces/${this.ns}/messages?type=private&type=broadcast`
         );
         return response.data;
     }
@@ -135,9 +157,43 @@ export class FireFly {
         .then(response => response.data)));
     }
     ///
-    async postData(data: any[]) {
-        await this.rest.post(`/namespaces/${this.ns}/data`, data);
+    async postData(data: PDF_Data) {
+
+       try {
+           await this.rest.post(`/namespaces/${this.ns}/data`, data,
+
+        );
+        }
+        catch(error){
+            console.log(error)
+        }
     }
+
+    async fdPost(data: any) {
+
+        try {
+            await this.rest.post(`/namespaces/${this.ns}/data`, data,
+            {headers: data.getHeaders()}
+ 
+         );
+         }
+         catch(error){
+             console.log(error)
+         }
+     }
+
+
+    async getData(hash:string): Promise<FireFlyMessage[]> {
+        const response = await this.rest.get<FireFlyMessage[]>(
+          `/namespaces/${this.ns}/data${hash}`)
+        return response.data;
+    }
+
+    // retrieveData(data: FireFlyDataIdentifier[]) {
+    //     return Promise.all(data.map(d =>
+    //     this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
+    //     .then(response => response.data)));
+    // }
 
 
 
@@ -157,12 +213,12 @@ export class FireFly {
 
 
     //gets the data from the node 
-    async getData(id: string): Promise<FireFlyMessage[]> {
-        const response = await this.rest.get<FireFlyMessage[]>(
-            `/namespaces/${this.ns}/data/${ id }`
-        );
-        return response.data;
-    }
+    // async getData(id: string): Promise<FireFlyMessage[]> {
+    //     const response = await this.rest.get<FireFlyMessage[]>(
+    //         `/namespaces/${this.ns}/data/${ id }`
+    //     );
+    //     return response.data;
+    // }
 
     //broadcasts data
     // async BroadcastData(data: FireFlyDataSend1[]){
