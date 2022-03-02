@@ -6,259 +6,162 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Landing Page</title>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js" integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" crossorigin="anonymous"></script>
-    <!-- <link rel="stylesheet" href="../css/dashboard.css"> -->
+    <link rel="stylesheet" type="text/css" href="/css/dashboard.css">
 
+    <style>
+        .blue{
+            background-color: lightskyblue;
+        }
+    </style>
 </head>
 
 <body>
     <h1 class="headline">Ihr Dashboard</h1>
-
     <!--Damit der erste Buchstabe des Namens gross geschrieben wird-->
     <h1>Hello <%= user.charAt(0).toUpperCase() + user.slice(1) %></h1>
+        
+    <div class="wrapper">
+        <!-- Send messages to the blockchain -->
+        <div class="send_messages">
+            <h4>Senden Sie eine Nachricht</h4>
+            <h4>Private Message </h4>
+            <!--Send Message-->
+            <form action="/send_text" method=POST>
+                <label class="selector" for="recipient">Empfänger</label>
+                <!-- Add multiple to allow multiple selections -->
+                <select name="recipient" id="res" size="5" >
+                    <optgroup label="Senden an">
+                        <option value="Broadcast" selected>An alle</option>
+                        <option value="Mandant">Mandant</option>
+                        <option value="Berater">Berater</option>
+                        <option value="Finanzamt">Finanzamt</option>
+                    </optgroup>
+                </select>
+                <br>
+                Nachricht: <input name="message" type="text" id="message"><br>
+                <button type="submit">SUBMIT</button>
+            </form>
+        </div>
 
-    
-    <!-- Send messages to the blockchain -->
-    <h4>Senden Sie eine Nachricht</h4>
+        <div class="send_docs">
+            <!-- Send Files to the Blockchain -->
+            <!-- direkt hinter file kann noch multiple gestellt werde -->
+            <h4>Senden Sie ihre Dokumente</h4>
+            <form action="/upload-file" method="POST" enctype="multipart/form-data">
+                <label for="recipient">Empfänger</label>
+                <!-- Add multiple to allow multiple selections -->
+                <select name="recipient" id="res" size="5" >
+                    <optgroup label="Senden an">
+                        <option value="Broadcast" selected>An alle</option>
+                        <option value="Mandant">Mandant</option>
+                        <option value="Berater">Berater</option>
+                        <option value="Finanzamt">Finanzamt</option>
+                    </optgroup>
+                </select>
+                <br>
+                <input type="file" name="file">
+                <input type="submit" value="Upload">
+            </form>
+        </div>
+
+        <div class="nested">
+            <div>Test</div>
+            <div>Test</div>
+            <div>Test</div>
+            <div>Test</div>
+            <div>Test</div>
+            <div>Test</div>
+        </div>
+
+        <h3>Msg</h3>
+        <div class="messages">
+            <!-- Display Messages -->
+            <ul id="messages">
+                <li>First Element</li>
+            </ul>
+        </div>
+
+        <div>
+
+        </div>
+
+        <div>
+            <a href="/users/logout">Logout</a>
+        </div>
+        
+        <div class="Boxen">
+            <div class="box box1">box 1bis3 column rows</div>
+            <div class="box box2">box 2</div>
+            <div class="box box3">box 3</div>
+            <div class="box box4">box 4</div>
+        </div>
 
 
-    <h4>Private Message </h4>
 
-    <!--Send Message-->
-    <form action="/send_text" method=POST>
-        <label for="recipient">Empfänger</label>
-        <!-- Add multiple to allow multiple selections -->
-        <select name="recipient" id="res" size="5" >
-            <optgroup label="Send to">
-                <option value="Broadcast" selected>An alle</option>
-                <option value="Mandant">Mandant</option>
-                <option value="Berater">Berater</option>
-                <option value="Finanzamt">Finanzamt</option>
-            </optgroup>
-        </select>
-        <br>
-        Nachricht: <input name="message" type="text" id="message"><br>
-        <button type="submit">SUBMIT</button>
-    </form><br>
 
-    <br>
-    <!-- Handle recipiants selection -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document
-            .getElementById("res")
-            .addEventListener('input', handleSelect);
-            //takes place every time the user selects something new
-            // .getEventListener('input', handleSelect)
-        });
-        function handleSelect(ev) {
-            let select = ev.target.value; //document.getElementbyId('res')
-            console.log(select);
-            //Below handels multiple selections
-            // let choices=[];
-            // for(let i=0;i<select.selectedOptions.length; i++){
-            //     choices.push(select.selectedOptions[i].value);
+
+        <!-- <form id="form" action="">      
+            <input id="input" autocomplete="off" />
+            <button id="send">Send</button>
+        </form> -->
+
+
+        <!-- Socket.io Script -->
+        <script>
+            var socket = io.connect('http://localhost:2000');
+            var messages = document.getElementById('messages');
+            // var form = document.getElementById('form');
+            // console.log(form);
+            // var input = document.getElementById('input');
+            // console.log(input)
+            // //send messages to server
+            // form.addEventListener('submit', function(e) {
+            //     e.preventDefault();
+            //     if(input.value){
+            //         socket.emit('chat message', input.value);
+            //         input.value = '';
+            //     }
+            // });
+            //receive messages from server
+            socket.on('chat message received', function(msg) {
+                console.log(msg);
+                //Clear all elements in list so they dont get displayed multiple times
+                messages.innerHTML = "";
+                for(var i of msg){
+                    var item = document.createElement('li');
+                    
+
+                    //.slice(1,-1);
+                    item.textContent = i.data[0].value;
+                    var time = document.createElement('li');
+                    time.textContent = i.message.header.created;
+                    //var author = document.createElement('li');
+                    //author.textContent = i.message.header.author;
+                    messages.appendChild(item);
+                    messages.appendChild(time);
+                    //messages.appendChild(author);
+                }           
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+            //send data from client to server: need jsobject with data and give it a name 
+            // console.log('Sending');
+            // var data = {
+            //     a: "Test",
+            //     b: "Data"
             // }
-            //same as above
-            //choices = [].map.call(select.selectedOptions, (option)=>option.value);)
-            //console.log(choices);
-        }
-    </script>
+            // socket.emit('message', data);
 
-
-    <!-- Display Messages -->
+            //CSS Style
 
 
 
-
-    <!-- Send Files to the Blockchain -->
-    <!-- direkt hinter file kann noch multiple gestellt werde -->
-    <h4>Senden Sie ihre Dokumente</h4>
-    <form class="form" id="myForm">
-        <input id="inputFile" type="file"/>
-        <button type="submit" onclick="convertToBase64()">Upload base64</button>
-        <!-- <button type="submit" onclick="sendbinary()"> Upload binary </button> -->
-        <button type="submit">Submit</button>
-    </form>
-
-
-    <br>
-    <a href="/users/logout">Logout</a>
-
-    <ul id="messages">
-    </ul>
-    <form id="form" action="">      
-        <input id="input" autocomplete="off" />
-        <button id="send">Send</button>
-    </form>
-
-    <script>
-        const myForm = document.getElementById('myForm');
-
-        myForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData();
-
-            var selectedFile = document.getElementById("inputFile").files[0];
-            console.log(selectedFile)
-
-            // formData.append('name', selectedFile.name),
-            // formData.append('size', selectedFile.size),
-            formData.append('file', selectedFile)
-            
-
-            fetch('http://localhost:5000/api/v1/namespace/default/data', {
-            method:"POST",
-            headers: {"Content-Type": undefined},
-            body: formData
-            }).then(function(res) {
-                return res.text();
-            }).then(function (text) {
-                console.log(text)
-            }).catch(function(err){
-                console.log(err)
-            })
-
-        })
-    </script>
-
-
-
-
-    <script type="text/javascript">
-        function sendbinary(){
-            var selectedFile = document.getElementById("inputFile").files;
-            var fileToLoad = selectedFile[0]
-            if (selectedFile.length > 0) {
-
-                var formData = new FormData();
-                formData.append("name", fileToLoad.name);
-                formData.append("size", fileToLoad.size);
-                formData.append("file", fileToLoad);
-
-
-
-                var options = {
-                    method: 'POST',
-                    //specify data as json data in the header
-                    headers: {
-                        'Content-Type': 'multipart/form-data'   
-                    },
-                    body: JSON.stringify(formData),
-                };
-                console.log("SEND FORMDATA: " + formData)
-                //use fetch to send data
-                fetch('http://localhost:5000/api/v1/namespace/default/data', {method: "POST", body:"a=1"})
-                .catch(err => console.log(err))
-            }
-        }
-    </script>
-
-
-
-
-    <!-- Convert to Base64 Script -->
-    <script type="text/javascript">
-        async function convertToBase64() {
-            //Read File
-            var selectedFile = document.getElementById("inputFile").files;
-            //Check File is not Empty
-            if (selectedFile.length > 0) {
-                // Select the very first file from list
-                var fileToLoad = selectedFile[0];
-                console.log(fileToLoad)
-                // FileReader function for read the file.
-                var fileReader = new FileReader();
-                var base64;
-                // Onload of file read the file content
-                console.log("STOPS HERE")
-                fileReader.onload = await function(fileLoadedEvent) {
-                    base64 = fileLoadedEvent.target.result;
-
-                    // const data = { base64 };
-
-                    console.log("NOT:" + base64)
-
-
-                    var formData = new FormData();
-                    // formData.append("name", fileToLoad.name);
-                    // formData.append("size", fileToLoad.size);
-                    formData.append("filename.ext", base64);
-
-                    console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-                    const options = {
-                    method: 'POST',
-                    //specify data as json data in the header
-                    headers: {
-                        'Content-Type': 'multipart/form-data'   
-                    },
-                    body: formData,
-                    }
-                    //use fetch to send data
-                    console.log("POST DATA WIHT FETCHI TO API")
-                    fetch('http://localhost:5000/api/v1/namespace/default/data', options);
-                };
-                //This executes before the function above 
-                //var pdf_base64 = fileReader.readAsDataURL(fileToLoad);    
-                //try binary
-                var pdf_base64 = fileReader.readAsBinaryString(fileToLoad);   
-            } else {
-                console.log("File not valid!")
-            }
-        }
-    </script>
-
-    <!-- Socket.io Script -->
-    <script>
-        var socket = io.connect('http://localhost:2000');
-        var messages = document.getElementById('messages');
-        var form = document.getElementById('form');
-        console.log(form);
-        var input = document.getElementById('input');
-        console.log(input)
-        //send messages to server
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if(input.value){
-                socket.emit('chat message', input.value);
-                input.value = '';
-            }
-        });
-        //receive messages from server
-        socket.on('chat message received', function(msg) {
-            console.log(msg);
-            //Clear all elements in list so they dont get displayed multiple times
-            messages.innerHTML = "";
-            for(var i of msg){
-                var item = document.createElement('li');
-                //.slice(1,-1);
-                item.textContent = i.data[0].value;
-                var time = document.createElement('li');
-                time.textContent = i.message.header.created;
-                //var author = document.createElement('li');
-                //author.textContent = i.message.header.author;
-                messages.appendChild(item);
-                messages.appendChild(time);
-                //messages.appendChild(author);
-            }           
-            window.scrollTo(0, document.body.scrollHeight);
-        });
-        //send data from client to server: need jsobject with data and give it a name 
-        // console.log('Sending');
-        // var data = {
-        //     a: "Test",
-        //     b: "Data"
-        // }
-        // socket.emit('message', data);
-    </script>
-    
-
-    <!-- Für Typescript benötigt  -->
-    <!-- Brauch ich die überhaupt???? -->
-    <script>var exports = {};</script>
-    <script src="https://rawgit.com/Microsoft/TypeScript/master/lib/typescriptServices.js"></script>
-    <script src="https://rawgit.com/basarat/typescript-script/master/transpiler.js"></script>
+        </script>
+        <!-- Für Typescript benötigt  -->
+        <!-- Brauch ich die überhaupt???? -->
+        <script>var exports = {};</script>
+        <script src="https://rawgit.com/Microsoft/TypeScript/master/lib/typescriptServices.js"></script>
+        <script src="https://rawgit.com/basarat/typescript-script/master/transpiler.js"></script>
+    </div>
 </body>
 
 </html>

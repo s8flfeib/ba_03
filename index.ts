@@ -1,4 +1,4 @@
-import { FireFlyDataSend1, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput, PDF_Data } from "./firefly";
+import { FireFlyMessageSend, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput} from "./firefly";
 
 //import express, {Request, Response, NextFunction, response} from 'express';
 const express = require('express');
@@ -9,6 +9,7 @@ const flash = require("express-flash");
 const passport = require("passport");
 const fetch = require("fetch");
 const socket = require("socket.io");
+
 const pdf2base64 = require("pdf-to-base64");
 const initializePassport = require("./passportConfig");
 const FormData = require('form-data');
@@ -39,7 +40,7 @@ const server = app.listen(PORT, () => {
 })
 
 const io = socket(server);
-
+app.set('socketio', io)
 
 //import { newMessage } from "./public/scripts/script01";
 const MAX_MESSAGES = 25;
@@ -58,9 +59,10 @@ interface MessageRow {
 import * as path from 'path'
 import { convertToObject, ExitStatus, isNamedExportBindings, setConstantValue } from "typescript";
 import axios from "axios";
+import { response } from "express";
 //var path = require('path')
 //app.use(express.static('public'))
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 //enable file upload
 app.use(fileUpload({createParentPath:true}))
@@ -106,47 +108,20 @@ async function main() {
     await ws2.ready();
     await ws3.ready();
 
+    
 
-    app.post('/upload-file', async(req:any,res:any) => {
-        //console.log(req.files.file)
-        var data = req.files.file
-
-        console.log(data.data)
-
-        var fd = new FormData();
-        fd.append("name", data.name)
-        fd.append("size", data.size)
-        fd.append("autometa", true)
-        fd.append("data", data.data)
-
-        var formData = new FormData();
-        //formData.append('file', fs.createReadStream('./sample.pdf'))
-        //formData.append('file', data.data)
-        formData.append('file', data.data, { filename : 'document.pdf' });
-        console.log(formData)
-        var file = formData
-        console.log(typeof(file))
-
-        const respo = await axios.post('http://localhost:5000/api/v1/namespaces/default/data', formData
-        
-        , {
-            headers: formData.getHeaders()
-        })
-        .catch(err => console.log(err))
-
-        res.redirect('/')
-    })
 
     //Start Index allows user to login or register:
     app.get("/", (req: any, res:any) => {
-        res.render('test')
-        //res.render('index', {user: "User"});
+        //Only to test PDF upload
+        //res.render('test')
+        res.render('index', {user: "User"});
     })
 
     //Send private Message and Broadcast between all Members!
     app.post("/send_text", (req:any, res:any) => {
         const message = JSON.stringify(req.body.message);
-        const sendData: FireFlyDataSend[] = [
+        const sendData: FireFlyMessageSend[] = [
             {value: message}
         ]
         var recipient = req.body.recipient;
@@ -175,20 +150,20 @@ async function main() {
                 switch(req.user.name){
                     case "Mandant":
                         firefly1.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                     case "Steuerberater":
                         firefly2.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                     case "Finanzamt":
                         firefly3.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                 }  
@@ -198,20 +173,20 @@ async function main() {
                 switch(req.user.name){
                     case "Mandant":
                         firefly1.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                     case "Steuerberater":
                         firefly2.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                     case "Finanzamt":
                         firefly3.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                 }
@@ -221,20 +196,20 @@ async function main() {
                 switch(req.user.name){
                     case "Mandant":
                         firefly1.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                     case "Steuerberater":
                         firefly2.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                                group: {members: recipients},
                         });
                         break;
                     case "Finanzamt":
                         firefly3.sendPrivate({
-                            data: [{value: message,},],
-                                group: {members: recipients,},
+                            data: sendData,
+                            group: {members: recipients},
                         });
                         break;
                 }
@@ -244,95 +219,158 @@ async function main() {
         res.redirect("/users/dashboard");
     });
 
-            // const data:FireFlyDataSend1 = {
-        //     blob:{
-        //         hash:"",
-        //         name:"",
-        //         public:"",
-        //         size: 0
-        //     },
-        //     datatype: {
-        //         name:"",
-        //         version:""
-        //     },
-        //     hash:"",
-        //     id:"",
-        //     validator:"",
-        //     value: pdf_base64
-        // }; 
-
-    app.get("/send_file",  (req: any, res:any) => { 
-        res.redirect("/users/dashboard")
-    });
-    app.post("/send_file", (req:any, res:any) => {
-        console.log("We are here");
-        //const pdf_binary = req.body.base64;
-        console.log(req)
-
-        // const data:PDF_Data = {
-        //     blob:{
-        //         name : "Blob Name",
-        //         public: pdf_binary,
-        //         size : pdf_binary.fileSize
-        //     },
-        //     value:{
-        //         filename:"-",
-        //         mimetype:"form-data; name=\"file\"; filename=\"-\""
-        //     }
-        // }
-
-
-        // const data = new FormData();
-        // data.append('autometa', "true");
-        // data.append('file', pdf_binary);
-        // formData.append('filename.ext', fs.createReadStream("sample.pdf"));
-
-
-//        firefly1.postData(data);
-
-
-
-        res.redirect("/users/dashboard");
-    });
+    app.post('/upload-file', async(req:any,res:any) => {
+        //get file from request
+        var data = req.files.file
+        //get recipients from request
+        //Only used here on the server to determine who will get the message
+        var recipient = req.body.recipient
+        //create FFMI object to push recipients on
+        //Used for FF so that it know who the members are
+        const recipients: FireFlyMemberInput[] = [];
+        //Create new FormData object to upload file to node
+        var formData = new FormData();
+        //Add file to FormData Object
+        formData.append('file', data.data, { filename : 'document.pdf' });
+        //Upload Data to own FireFly Node
+        const data_id:string = await firefly1.uploadData(formData);
+        console.log("Data id to send to other members: " +data_id)
+        //create data object with the id of the data posts
+        const distribute_data:FireFlyDataSend[] = [
+            { id: data_id }
+        ]
+        //Broadcast or send Data privately to other members depending on the recipient input
+        switch(recipient) {
+            case "Broadcast":
+                console.log("Broadcast")
+                switch(req.user.name) {
+                    case "Mandant":
+                        console.log("Send from M");
+                        await firefly1.broadcastData(distribute_data);
+                        break;
+                    case "Steuerberater":
+                        console.log("Send from S");
+                        await firefly2.broadcastData(distribute_data);
+                        break;
+                    case "Finanzamt":
+                        console.log("Send from F");
+                        await firefly3.broadcastData(distribute_data);
+                        break;
+                }
+                break;
+            case "Mandant":
+                recipients.push({identity: "org_0"});
+                switch(req.user.name){
+                    case "Mandant":
+                        firefly1.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                    case "Steuerberater":
+                        firefly2.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                    case "Finanzamt":
+                        firefly3.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                }  
+                break;
+            case "Berater":
+                recipients.push({identity: "org_1"});
+                switch(req.user.name){
+                    case "Mandant":
+                        firefly1.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                    case "Steuerberater":
+                        firefly2.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                    case "Finanzamt":
+                        firefly3.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                }
+                break;
+            case "Finanzamt":
+                recipients.push({identity: "org_2"});
+                switch(req.user.name){
+                    case "Mandant":
+                        firefly1.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                    case "Steuerberater":
+                        firefly2.privateData({
+                            data: distribute_data,
+                                group: {members: recipients},
+                        });
+                        break;
+                    case "Finanzamt":
+                        firefly3.privateData({
+                            data: distribute_data,
+                            group: {members: recipients},
+                        });
+                        break;
+                }
+                break;
+        }
+        res.redirect('/users/dashboard')
+    })
 
     app.get("/users/dashboard", checkNotAuthenticated, (req:any, res:any) => {
+        //Set up Socket Connection and make sure there is only one existing connection!
+        io.on('connection', newConnection);
+        let socket_id:any = [];   
+        async function newConnection(socket:any){
+            console.log("New Socket Connection: " + socket.id);
+            socket_id.push(socket.id);
+            if (socket_id[0] === socket.id) {
+              // remove the connection listener for any subsequent 
+              // connections with the same ID
+              io.removeAllListeners('connection'); 
+            }
+            //Get FireFly Messages from which we need to retrieve the data
+            var allMessages = await firefly1.getAllMessages();
+            //Rows will be send to the client
+            const rows: MessageRow[] = [];
+            //push the Data of the Messages onto rows which then will be send to the Client
+            for(const message of allMessages) {
+                //get Data from Message_id
+                var message_data = await firefly1.retrieveData(message.data)
+                //push message_data to rows
+                rows.push({message: message, data: message_data})
+            }
+            //access massages and time
+            // console.log(rows[20].data[0].value);
+            // console.log(rows[20].message.header.created);
+            console.log("Send rows to client");
+            io.emit('chat message received', rows);
+
+            socket.on('disconnect', () => {
+                //triggers when closing browser or logout
+                console.log('Socket connection closed!');
+            })
+        }
         res.render("dashboard", {user: req.user.name});
     });
 
-    //Set up Socket.io connection to send to the client
-    //Auf jeden einzelnen Client zuschneiden !!
-    io.on('connection', newConnection);
 
-    async function newConnection(socket:any){
-        //Load last 25 Messages
-        //Get id and Hash of the Messages 
-        // !!!!!!!ONLY FIREFLY1 /////////////
-        var allMessages = await firefly1.getAllMessages();
-        //console.log(response);
-        const rows: MessageRow[] = [];
-        //push all 25 messages to MessageRow{message: FireFlyMessage, data:FireFlyData[]}
-        for(const message of allMessages) {
-            var message_data = await firefly1.retrieveData(message.data)
-            // console.log(message.data)
-            rows.push({message: message, data: message_data})
-        }
-        //access massages and time
-        // console.log(rows[20].data[0].value);
-        // console.log(rows[20].message.header.created);
-        console.log("New Socket Connection: " + socket.id);
-        console.log("send rows to client");
-        io.emit('chat message received', rows);
 
-        socket.on('disconnect', () => {
-            //triggers when closing browser or logout
-            console.log('user disconnected');
-        })
-    }
 
-    app.get("/users/dashboard_01", checkNotAuthenticated, async (req: any, res:any) => {
-
-        res.redirect('dashboard');
-    })
 
     //check authentication before moving on to the rest
     app.get("/users/register", checkAuthenticated, (req: any, res:any) => {
@@ -403,7 +441,7 @@ async function main() {
     })
 
     app.post("/users/login", passport.authenticate('local', {
-            successRedirect: "/users/dashboard_01",
+            successRedirect: "/users/dashboard",
             failureRedirect: "/users/login",
             failureFlash: true
         })
@@ -432,6 +470,9 @@ async function main() {
         }
         res.redirect("/users/login");
     }
+
+
+    //Pagination probably better on client side !?
 
     function paginatedResults(model:any) {
         return (req:any, res:any, next:any) => {

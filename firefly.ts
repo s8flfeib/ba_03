@@ -1,46 +1,21 @@
 import axios, { AxiosInstance } from 'axios';
 import WebSocket from 'ws';
 
-export interface FireFlyDataSend {
+export interface FireFlyMessageSend {
     value: string;
 }
-
-export interface PDF_Data {
-    blob: {
-        name:string,
-        public:string,
-        size: number
-    },
-    value:{
-        filename:string,
-        mimetype:string
-    }
-
-}
-
-// export interface FireFlyDataSend1 {
-//     value: {
-//         filename:string;
-//         size: number;
-//     }
-// }
-
-export interface FireFlyDataSend1 {
-    blob: {
-        hash:string;
-        name:string;
-        public:string;
-        size:number;
-    }
-    datatype: {
-        name:string;
-        version:string;
-    }
-    hash:string;
+export interface FireFlyDataSend {
     id:string;
-    validator:string;
-    value:string;
 }
+
+export interface FireFlyDataInput {
+    data: FireFlyDataSend[];
+    group: {
+      name?: string;
+      members: FireFlyMemberInput[];
+    };
+}
+
 
 export interface FireFlyD {
     filename: string;
@@ -51,7 +26,7 @@ export interface FireFlyBlob {
     hash: string;
 }
 
-export interface FireFlyData extends FireFlyDataSend {
+export interface FireFlyData extends FireFlyMessageSend {
     id: string;
 }
 
@@ -73,7 +48,7 @@ export interface FireFlyMessage {
 
 
 export interface FireFlyMessageInput {
-    data: FireFlyDataSend[];
+    data: FireFlyMessageSend[];
     group: {
       name?: string;
       members: FireFlyMemberInput[];
@@ -130,7 +105,7 @@ export class FireFly {
     //Funktionierende Funktionen
 
     //Send Braodcast
-    async sendBroadcast(data: FireFlyDataSend[]) {
+    async sendBroadcast(data: FireFlyMessageSend[]) {
         await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, { data });
     }
     //Send private Message
@@ -144,107 +119,38 @@ export class FireFly {
         );
         return response.data;
     }
-    //Get All Messages Ohne types bekommt man nur 10 Messages
+    //Get All Messages Ohne types bekommt man nur 10 Messages???
     async getAllMessages(): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
           `/namespaces/${this.ns}/messages?type=private&type=broadcast`
         );
         return response.data;
     }
+    //Retrives the actuall Message value (data)
     retrieveData(data: FireFlyDataIdentifier[]) {
         return Promise.all(data.map(d =>
         this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
         .then(response => response.data)));
     }
-    ///
-    async postData(data: PDF_Data) {
-
-       try {
-           await this.rest.post(`/namespaces/${this.ns}/data`, data,
-
-        );
-        }
-        catch(error){
-            console.log(error)
-        }
-    }
-
-    async fdPost(data: any) {
-
-        try {
-            await this.rest.post(`/namespaces/${this.ns}/data`, data,
-            {headers: data.getHeaders()}
- 
-         );
-         }
-         catch(error){
-             console.log(error)
-         }
-     }
-
-
-    async getData(hash:string): Promise<FireFlyMessage[]> {
-        const response = await this.rest.get<FireFlyMessage[]>(
-          `/namespaces/${this.ns}/data${hash}`)
-        return response.data;
-    }
-
-    // retrieveData(data: FireFlyDataIdentifier[]) {
-    //     return Promise.all(data.map(d =>
-    //     this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
-    //     .then(response => response.data)));
-    // }
-
-
-
-
-
-
-    //Tryout
-
-
-
-
-
-    //Will send data to the ff node but will not proadcast or send
-    async sendFile(files: FireFlyDataSend[]) {
-        await this.rest.post(`/namespaces/${this.ns}/data`,);
-    }
-
-
-    //gets the data from the node 
-    // async getData(id: string): Promise<FireFlyMessage[]> {
-    //     const response = await this.rest.get<FireFlyMessage[]>(
-    //         `/namespaces/${this.ns}/data/${ id }`
-    //     );
-    //     return response.data;
-    // }
-
-    //broadcasts data
-    // async BroadcastData(data: FireFlyDataSend1[]){
-    //     await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
-    // }
-    async broadcastData(data: FireFlyDataSend[]) {
-        await this.rest.post(`/namespaces/${this.ns}/broadcast/message`, { data });
-    }
-
-    //data: FireFlyDataSend1[]
+    //Upload data to own FireFly node
     async uploadData(data: any) {
-        await this.rest.post(`/namespaces/${this.ns}/data`, data );
+        const response = await this.rest.post(`/namespaces/${this.ns}/data`, data,
+        {
+           headers: data.getHeaders() 
+        });
+        return response.data.id
     }
-    //
-
-
-
-    
-
-    async getData1(): Promise<FireFlyMessage[]> {
-        const response = await this.rest.get<FireFlyMessage[]>(
-          `/namespaces/${this.ns}/data?limit=1`
-        );
-        return response.data;
+    //Broadcast Data(PDF) to all 
+    async broadcastData(data: FireFlyDataSend[]) {
+        await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, { data });
+    }
+    //Privately send Data(PDF) to selected members of the network
+    async privateData(privateMessage: FireFlyDataInput): Promise<void> {
+        await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
     }
 
+
+  
 
 
 }
