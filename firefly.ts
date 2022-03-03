@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import WebSocket from 'ws';
+import WebSocket, { prototype } from 'ws';
 
 export interface FireFlyMessageSend {
     value: string;
@@ -97,12 +97,19 @@ export class FireFlyListener {
 export class FireFly {
     private rest: AxiosInstance;
     private ns = 'default';
+    private port:number;
     
     constructor(port: number) {
         this.rest = axios.create({ baseURL: `http://localhost:${port}/api/v1` });
+        this.port = port;
     }
     
     //Funktionierende Funktionen
+    public getfirefly() {
+        return this.port
+    }
+
+
 
     //Send Braodcast
     async sendBroadcast(data: FireFlyMessageSend[]) {
@@ -147,6 +154,12 @@ export class FireFly {
     //Privately send Data(PDF) to selected members of the network
     async privateData(privateMessage: FireFlyDataInput): Promise<void> {
         await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
+    }
+    //Retireves Data Bloob from Data id 
+    retrieveDataBlob(data: FireFlyDataIdentifier[]) {
+        return Promise.all(data.map(d =>
+        this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}/blob`)
+        .then(response => response.data)));
     }
 
 

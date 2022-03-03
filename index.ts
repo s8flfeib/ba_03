@@ -103,6 +103,11 @@ async function main() {
     const ws2 = new FireFlyListener(5001);
     const firefly3 = new FireFly(5002);
     const ws3 = new FireFlyListener(5002);
+
+    // console.log(firefly2);
+    // // console.log(JSON.stringify(firefly1))
+    // console.log(JSON.stringify(firefly1.getfirefly()))
+    // console.log(firefly2.getfirefly())
       
     await ws1.ready();
     await ws2.ready();
@@ -127,6 +132,7 @@ async function main() {
         var recipient = req.body.recipient;
         const recipients: FireFlyMemberInput[] = [];
 
+        console.log("Message recipient(s) is/are: "+recipient)
         switch(recipient) {
             case "Broadcast":
                 console.log("Broadcast")
@@ -193,6 +199,7 @@ async function main() {
                 break;
             case "Finanzamt":
                 recipients.push({identity: "org_2"});
+                console.log(recipients)
                 switch(req.user.name){
                     case "Mandant":
                         firefly1.sendPrivate({
@@ -203,7 +210,7 @@ async function main() {
                     case "Steuerberater":
                         firefly2.sendPrivate({
                             data: sendData,
-                                group: {members: recipients},
+                            group: {members: recipients},
                         });
                         break;
                     case "Finanzamt":
@@ -331,26 +338,53 @@ async function main() {
         res.redirect('/users/dashboard')
     })
 
-    app.get("/users/dashboard", checkNotAuthenticated, (req:any, res:any) => {
+    app.get("/users/dashboard", checkNotAuthenticated, async (req:any, res:any) => {
         //Set up Socket Connection and make sure there is only one existing connection!
+        console.log(req.user.name)
+        const user = req.user.name
+
+        var firefly = {} as FireFly;
+        switch(user) {
+            case "Mandant":
+                firefly = firefly1
+                break;
+            case "Steuerberater":
+                firefly = firefly2
+                break;
+            case "Finanzamt":
+                firefly = firefly3
+                break;
+        }
+
+        console.log("Current firefly Node: "+ firefly.getfirefly())
+        var c = 0;
+
+        var pdf = await firefly.retrieveDataBlob([{id: "1a42aea3-97a5-4379-8258-a94121591974", hash:"8decc8571946d4cd70a024949e033a2a2a54377fe9f1c1b944c20f9ee11a9e51"}])
+        console.log(pdf[0])
+
+
         io.on('connection', newConnection);
         let socket_id:any = [];   
         async function newConnection(socket:any){
-            console.log("New Socket Connection: " + socket.id);
+            console.log("New Socket Connection: " + user + " : " + socket.id);
             socket_id.push(socket.id);
             if (socket_id[0] === socket.id) {
               // remove the connection listener for any subsequent 
               // connections with the same ID
               io.removeAllListeners('connection'); 
             }
-            //Get FireFly Messages from which we need to retrieve the data
-            var allMessages = await firefly1.getAllMessages();
+            //Get FireFly Messages(id, hash) from which we need to retrieve the data
+            var allMessages = await firefly.getAllMessages();
+            console.log(allMessages[0].data)
             //Rows will be send to the client
             const rows: MessageRow[] = [];
+            
             //push the Data of the Messages onto rows which then will be send to the Client
             for(const message of allMessages) {
+                c+=1;
+                console.log("Message " + c + ": " + message)
                 //get Data from Message_id
-                var message_data = await firefly1.retrieveData(message.data)
+                var message_data = await firefly.retrieveData(message.data)
                 //push message_data to rows
                 rows.push({message: message, data: message_data})
             }
@@ -358,7 +392,12 @@ async function main() {
             // console.log(rows[20].data[0].value);
             // console.log(rows[20].message.header.created);
             console.log("Send rows to client");
-            io.emit('chat message received', rows);
+            const informations = {
+                user: user,
+                rows: rows,
+                file: pdf
+            };
+            io.emit('chat message received', informations);
 
             socket.on('disconnect', () => {
                 //triggers when closing browser or logout

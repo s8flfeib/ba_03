@@ -8,10 +8,16 @@ body {
     border: 2px solid #2196f3;
 }
 
+.msg {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-gap: 1em;
+}
+
 /* Now handle Grid */
 .wrapper{
     display: grid;
-    grid-template-columns: 30% 30% 30%;
+    grid-template-columns: 1fr 1fr;
     /* Set to seperate column/rows gap */
     /* grid-column-gap: 1em;
     grid-row-gap: 1em; */
@@ -28,22 +34,7 @@ body {
     align-items: stretch;
 }
 
-.messages{
-    display: grid;
-}
-.messages > li{
-    background-color: aqua;
-}
-.messages > li:nth-child(odd){
-    background-color:greenyellow;
-}
 
-.nested{
-    display:grid;
-    grid-template-columns: 30% 30% 30%;
-    grid-auto-rows: 70px;
-    grid-gap: 1em;
-}
 
 .Boxen{
     display: grid;
@@ -82,14 +73,6 @@ body {
     grid-row: 2/4;
 }
 
-.nested > div{
-    border:#333 1px solid;
-    padding: 1em;
-
-}
-
-
-
 
 .wrapper > div {
     /* Gib allen weiteren div elementen dunkelgrau */
@@ -102,3 +85,9 @@ body {
     background-color: #eee;
 }
 
+.msg > div{
+    background-color: #2196f3;
+}
+.msg >div:nth-child(odd){
+    background-color: aquamarine;
+}

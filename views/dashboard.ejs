@@ -64,24 +64,23 @@
             </form>
         </div>
 
-        <div class="nested">
-            <div>Test</div>
-            <div>Test</div>
-            <div>Test</div>
-            <div>Test</div>
-            <div>Test</div>
-            <div>Test</div>
+
+
+        <!-- Display Messages -->
+        <div class="msg">
+            <div>
+                <ul id="messages">
+                </ul>
+            </div>
+            <div>
+                <ul id="mymessages">
+                </ul>
+            </div>
         </div>
 
-        <h3>Msg</h3>
-        <div class="messages">
-            <!-- Display Messages -->
-            <ul id="messages">
-                <li>First Element</li>
+        <div class="doc">
+            <ul id="files">
             </ul>
-        </div>
-
-        <div>
 
         </div>
 
@@ -110,6 +109,11 @@
         <script>
             var socket = io.connect('http://localhost:2000');
             var messages = document.getElementById('messages');
+            var mymessages = document.getElementById('mymessages');
+            var files = document.getElementById('files');
+            const org_0 = {id:"did:firefly:org/ca0fb065-cad3-4098-b5ca-236619e6b1a4", name:"Mandant"};
+            const org_1 = {id:"did:firefly:org/a7f8d304-81b7-4123-9ed4-5d13daa319fc", name:"Steuerberater"};
+            const org_2 ={id:"did:firefly:org/ed8218b3-46ff-41e5-ba82-30ea724abfa2", name:"Finanzamt"};
             // var form = document.getElementById('form');
             // console.log(form);
             // var input = document.getElementById('input');
@@ -123,24 +127,165 @@
             //     }
             // });
             //receive messages from server
-            socket.on('chat message received', function(msg) {
-                console.log(msg);
+            socket.on('chat message received', async function(infos) {
+                console.log(infos);
+                const user = infos.user
+                const msg = infos.rows
+                const d = new Date();
+                console.log(msg)
                 //Clear all elements in list so they dont get displayed multiple times
                 messages.innerHTML = "";
-                for(var i of msg){
-                    var item = document.createElement('li');
-                    
+                mymessages.innerHTML = "";
+                files.innerHTML= "";
 
-                    //.slice(1,-1);
-                    item.textContent = i.data[0].value;
-                    var time = document.createElement('li');
-                    time.textContent = i.message.header.created;
-                    //var author = document.createElement('li');
-                    //author.textContent = i.message.header.author;
-                    messages.appendChild(item);
-                    messages.appendChild(time);
-                    //messages.appendChild(author);
-                }           
+                //Handle PDFs
+                var pdf = new Blob(infos.file, {type: 'application/pdf'});
+                var url = URL.createObjectURL(pdf);
+                var a = document.createElement('a');
+                var linkText = document.createTextNode("my title text");
+                a.appendChild(linkText);
+                a.title = "my title text";
+                // target would allow the file to be opend in a new browser window 
+                a.target ="_blank"
+                //download will automatically download the file with given name!
+                a.download="newFilename"
+                a.href = url;
+                files.appendChild(a);
+
+
+
+                console.log(user)
+                switch(user){
+                    case "Mandant":
+                        for(var i of msg){
+                            var date = i.message.header.created
+                            var time = date.split("T")[1].split(".")[0].slice(0,-3)
+                            var value = time+"  "+i.data[0].value
+
+
+
+                            var item = document.createElement('li');
+                            item.textContent = value
+
+                            var empty = document.createElement('li');
+                            empty.textContent = ""
+                            var sender = i.message.header.author
+                            // console.log("sender: " + sender)
+                            // console.log("org: " +org_0)
+                            switch(sender){
+                                case org_0.id:
+                                    mymessages.appendChild(item)
+                                    messages.appendChild(empty)
+                                    break;
+
+                                case org_1.id:
+                                    messages.appendChild(item)
+                                    mymessages.appendChild(empty)
+                                    break;
+
+                                case org_2.id:
+                                    messages.appendChild(item)
+                                    mymessages.appendChild(empty)
+                                    break;
+                            }
+                        }
+                        break;
+                    case "Steuerberater":
+                        for(var i of msg){
+                            var date = i.message.header.created
+                            var time = date.split("T")[1].split(".")[0].slice(0,-3)
+                            var value = time+"  "+i.data[0].value
+
+
+
+                            var item = document.createElement('li');
+                            item.textContent = value
+
+                            var empty = document.createElement('li');
+                            empty.textContent = ""
+                            var sender = i.message.header.author
+                            // console.log("sender: " + sender)
+                            // console.log("org: " +org_0)
+                            switch(sender){
+                                case org_0.id:
+                                    messages.appendChild(item)
+                                    mymessages.appendChild(empty)
+                                    break;
+
+                                case org_1.id:
+                                    mymessages.appendChild(item)
+                                    messages.appendChild(empty)
+                                    break;
+
+                                case org_2.id:
+                                    messages.appendChild(item)
+                                    mymessages.appendChild(empty)
+                                    break;
+                            }
+                        }
+                        break;
+                    case "Finanzamt":
+                        for(var i of msg){
+                            var date = i.message.header.created
+                            var time = date.split("T")[1].split(".")[0].slice(0,-3)
+                            var value = time+"  "+i.data[0].value
+                            //NEUER TAG EINFÜGEN
+                            // var day = parseInt(date.split("T")[0].slice(-2))
+                            
+                            // if( d.getDate() != i.message.header.created.split("T")[0].slice(-2)){
+                            //     var newday = document.createElement('li')
+                            //     newday.textContent = date.split("T")
+                            //     messages.appendChild(newday)
+                            //     mymessages.appendChild(newday)
+                            // }
+                            var item = document.createElement('li');
+                            item.textContent = value
+                            // var date = document.createElement('li');
+                            // date.textContent = i.message.header.created;
+                            var empty = document.createElement('li');
+                            empty.textContent = ""
+                            var sender = i.message.header.author
+                            // console.log("sender: " + sender)
+                            // console.log("org: " +org_0)
+                            switch(sender){
+                                case org_0.id:
+                                    messages.appendChild(item)
+                                    mymessages.appendChild(empty)
+                                    break;
+
+                                case org_1.id:
+                                    messages.appendChild(item)
+                                    mymessages.appendChild(empty)
+                                    break;
+
+                                case org_2.id:
+                                    mymessages.appendChild(item)
+                                    messages.appendChild(empty)
+                                    break;
+                            }
+                        }
+                        break;
+                    
+                }
+
+
+
+
+
+
+                // for(var i of msg){
+                //     var item = document.createElement('li');
+                //     //.slice(1,-1);
+                //     item.textContent = i.data[0].value;
+                //     var time = document.createElement('li');
+                //     time.textContent = i.message.header.created;
+                //     //var author = document.createElement('li');
+                //     //author.textContent = i.message.header.author;
+                //     //console.log(i.message.header.author)
+                //     messages.appendChild(item);
+                //     messages.appendChild(time);
+                //     //messages.appendChild(author);
+                // }           
                 window.scrollTo(0, document.body.scrollHeight);
             });
             //send data from client to server: need jsobject with data and give it a name 
@@ -153,6 +298,7 @@
 
             //CSS Style
 
+            
 
 
         </script>
