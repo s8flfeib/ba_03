@@ -129,28 +129,45 @@
             //receive messages from server
             socket.on('chat message received', async function(infos) {
                 console.log(infos);
-                const user = infos.user
-                const msg = infos.rows
+                var count = 0;
+                const user = infos.user;
+                const msg = infos.rows;
+                const pdfs = infos.file;
                 const d = new Date();
-                console.log(msg)
                 //Clear all elements in list so they dont get displayed multiple times
                 messages.innerHTML = "";
                 mymessages.innerHTML = "";
                 files.innerHTML= "";
+                //Handle PDFs => Missing: Wer hat an wen gesendet
+                for(var i of pdfs){
+                    var pdf = new Blob(pdfs, {type: 'application/pdf'});
+                    var url = URL.createObjectURL(pdf);
+                    var a = document.createElement('a');
+                    //FIND OUT NAME OF THE PDF
+                    var linkText = document.createTextNode("File_0"+count);
+                    count += 1;
+                    a.appendChild(linkText);
+                    a.title = "title";
+                    a.download="newFilename"
+                    a.href = url;
+                    files.appendChild(a);
+                    //Just for better look, can be handled by css 
+                    files.appendChild(document.createElement('br'))
 
-                //Handle PDFs
-                var pdf = new Blob(infos.file, {type: 'application/pdf'});
-                var url = URL.createObjectURL(pdf);
-                var a = document.createElement('a');
-                var linkText = document.createTextNode("my title text");
-                a.appendChild(linkText);
-                a.title = "my title text";
-                // target would allow the file to be opend in a new browser window 
-                a.target ="_blank"
-                //download will automatically download the file with given name!
-                a.download="newFilename"
-                a.href = url;
-                files.appendChild(a);
+                }
+
+                // var pdf = new Blob(infos.file, {type: 'application/pdf'});
+                // var url = URL.createObjectURL(pdf);
+                // var a = document.createElement('a');
+                // var linkText = document.createTextNode("my title text");
+                // a.appendChild(linkText);
+                // a.title = "my title text";
+                // // target would allow the file to be opend in a new browser window 
+                // a.target ="_blank"
+                // //download will automatically download the file with given name!
+                // a.download="newFilename"
+                // a.href = url;
+                // files.appendChild(a);
 
 
 

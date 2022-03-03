@@ -1,4 +1,4 @@
-import { FireFlyMessageSend, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput} from "./firefly";
+import { FireFlyFiles, FireFlyMessageSend, FireFlyD, FireFlyBlob, FireFly, FireFlyListener, FireFlyData, FireFlyMessage, FireFlyDataSend, FireFlyDataIdentifier, FireFlyMemberInput, FireFlyMessageInput} from "./firefly";
 
 //import express, {Request, Response, NextFunction, response} from 'express';
 const express = require('express');
@@ -52,6 +52,7 @@ interface MessageRow {
     message: FireFlyMessage;
     data: FireFlyData[];
 }
+
 
 
 //const dataValues = (data: FireFlyData[]) => data.map( d => d.value);
@@ -342,7 +343,7 @@ async function main() {
         //Set up Socket Connection and make sure there is only one existing connection!
         console.log(req.user.name)
         const user = req.user.name
-
+        //Select the rigth FireFly node to get the Data from 
         var firefly = {} as FireFly;
         switch(user) {
             case "Mandant":
@@ -355,50 +356,68 @@ async function main() {
                 firefly = firefly3
                 break;
         }
-
         console.log("Current firefly Node: "+ firefly.getfirefly())
-        var c = 0;
-
-        var pdf = await firefly.retrieveDataBlob([{id: "1a42aea3-97a5-4379-8258-a94121591974", hash:"8decc8571946d4cd70a024949e033a2a2a54377fe9f1c1b944c20f9ee11a9e51"}])
-        console.log(pdf[0])
 
 
+        //Get all PDF Files 
+        const data = await firefly.getAllData();
+        //console.log(data)
+        const files = [];
+        //get all the PDF
+        for(const p of data) {
+            if(p.value == null){
+                files.push(p)
+            }
+        }
+        //console.log(files)
+        //get the actuall data value 
+        const pdfs = [];
+        for(const i of files){
+            var pdf = await firefly.retrieveDataBlob([{id: i.id, hash: i.hash}])
+            pdfs.push(pdf)
+        }
+        console.log(pdfs)
+
+        //var pdf = await firefly.retrieveDataBlob([{id: "1a42aea3-97a5-4379-8258-a94121591974", hash:"8decc8571946d4cd70a024949e033a2a2a54377fe9f1c1b944c20f9ee11a9e51"}])
+        //console.log(pdf[0])
+
+
+
+
+        //Get all Text Messages
+        //Get FireFly Messages(id, hash) from which we need to retrieve the data
+        var allMessages = await firefly.getAllMessages();
+        // console.log(allMessages[0].data)
+        //Rows will be send to the client
+        const rows: MessageRow[] = [];
+        //push the Data of the Messages onto rows which then will be send to the Client
+        for(const message of allMessages) {
+            //get Data from Message_id
+            var message_data = await firefly.retrieveData(message.data)
+            //push message_data to rows
+            rows.push({message: message, data: message_data})
+        }
+        //get all the informations thats gonna be send to the client
+        const informations = {
+            user: user,
+            rows: rows,
+            file: pdfs
+        };
+        //handeling socket data transfere
         io.on('connection', newConnection);
         let socket_id:any = [];   
         async function newConnection(socket:any){
             console.log("New Socket Connection: " + user + " : " + socket.id);
             socket_id.push(socket.id);
+            //remove existing socket connections
             if (socket_id[0] === socket.id) {
               // remove the connection listener for any subsequent 
               // connections with the same ID
               io.removeAllListeners('connection'); 
             }
-            //Get FireFly Messages(id, hash) from which we need to retrieve the data
-            var allMessages = await firefly.getAllMessages();
-            console.log(allMessages[0].data)
-            //Rows will be send to the client
-            const rows: MessageRow[] = [];
-            
-            //push the Data of the Messages onto rows which then will be send to the Client
-            for(const message of allMessages) {
-                c+=1;
-                console.log("Message " + c + ": " + message)
-                //get Data from Message_id
-                var message_data = await firefly.retrieveData(message.data)
-                //push message_data to rows
-                rows.push({message: message, data: message_data})
-            }
-            //access massages and time
-            // console.log(rows[20].data[0].value);
-            // console.log(rows[20].message.header.created);
-            console.log("Send rows to client");
-            const informations = {
-                user: user,
-                rows: rows,
-                file: pdf
-            };
+            //send information(user, rows(textmessages), files(pdf)) to the client
             io.emit('chat message received', informations);
-
+            //Disconnecting socket connections
             socket.on('disconnect', () => {
                 //triggers when closing browser or logout
                 console.log('Socket connection closed!');

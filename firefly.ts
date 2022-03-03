@@ -42,8 +42,22 @@ export interface FireFlyMessage {
       author: string;
       created: string;
     };
+    // value:string;
     local: boolean;
     data: FireFlyDataIdentifier[];
+}
+
+export interface FireFlyFiles {
+    id:string;
+    validator:string;
+    hash:string;
+    created:string;
+    value:string;
+    blob: {
+        hash:string;
+        size:number;
+        name:string;
+    }
 }
 
 
@@ -154,6 +168,13 @@ export class FireFly {
     //Privately send Data(PDF) to selected members of the network
     async privateData(privateMessage: FireFlyDataInput): Promise<void> {
         await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
+    }
+    //Get All Messages Ohne types bekommt man nur 10 Messages???
+    async getAllData(): Promise<FireFlyFiles[]> {
+        const response = await this.rest.get<FireFlyFiles[]>(
+            `/namespaces/${this.ns}/data`
+        );
+        return response.data;
     }
     //Retireves Data Bloob from Data id 
     retrieveDataBlob(data: FireFlyDataIdentifier[]) {
