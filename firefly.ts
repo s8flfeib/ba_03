@@ -5,14 +5,14 @@ export interface FireFlyMessageSend {
     value: string;
 }
 export interface FireFlyDataSend {
-    id:string;
+    id: string;
 }
 
 export interface FireFlyDataInput {
     data: FireFlyDataSend[];
     group: {
-      name?: string;
-      members: FireFlyMemberInput[];
+        name?: string;
+        members: FireFlyMemberInput[];
     };
 }
 
@@ -30,7 +30,7 @@ export interface FireFlyData extends FireFlyMessageSend {
     id: string;
 }
 
-  
+
 export interface FireFlyDataIdentifier {
     id: string;
     hash: string;
@@ -38,9 +38,9 @@ export interface FireFlyDataIdentifier {
 
 export interface FireFlyMessage {
     header: {
-      id: string;
-      author: string;
-      created: string;
+        id: string;
+        author: string;
+        created: string;
     };
     // value:string;
     local: boolean;
@@ -48,15 +48,15 @@ export interface FireFlyMessage {
 }
 
 export interface FireFlyFiles {
-    id:string;
-    validator:string;
-    hash:string;
-    created:string;
-    value:string;
+    id: string;
+    validator: string;
+    hash: string;
+    created: string;
+    value: string;
     blob: {
-        hash:string;
-        size:number;
-        name:string;
+        hash: string;
+        size: number;
+        name: string;
     }
 }
 
@@ -64,13 +64,20 @@ export interface FireFlyFiles {
 export interface FireFlyMessageInput {
     data: FireFlyMessageSend[];
     group: {
-      name?: string;
-      members: FireFlyMemberInput[];
+        name?: string;
+        members: FireFlyMemberInput[];
     };
 }
 
 export interface FireFlyMemberInput {
     identity: string;
+}
+
+export interface FireFlyOrga {
+    id: string;
+    message: string;
+    identity: string;
+    name: string;
 }
 
 
@@ -84,7 +91,7 @@ export interface FireFlyMemberInput {
 
 //Websocket class that creates a Connection 
 export class FireFlyListener {
-    private ws:  WebSocket;
+    private ws: WebSocket;
     private connected: Promise<void>;
     private messages: FireFlyMessage[] = [];
 
@@ -111,19 +118,27 @@ export class FireFlyListener {
 export class FireFly {
     private rest: AxiosInstance;
     private ns = 'default';
-    private port:number;
-    
+    private port: number;
+
     constructor(port: number) {
         this.rest = axios.create({ baseURL: `http://localhost:${port}/api/v1` });
         this.port = port;
     }
-    
+
     //Funktionierende Funktionen
     public getfirefly() {
         return this.port
     }
 
-
+    //Get organizations
+    async getOrga(): Promise<FireFlyOrga[]> {
+        const response = await this.rest.get<FireFlyOrga[]>(
+            `/network/organizations`
+        );
+        // console.log("We are here");
+        // console.log(response.data)
+        return response.data
+    }
 
     //Send Braodcast
     async sendBroadcast(data: FireFlyMessageSend[]) {
@@ -136,29 +151,29 @@ export class FireFly {
     //Get Messages Limit Broadcast & Private
     async getMessages(limit: number): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
-          `/namespaces/${this.ns}/messages?limit=${limit}&type=private&type=broadcast`
+            `/namespaces/${this.ns}/messages?limit=${limit}&type=private&type=broadcast`
         );
         return response.data;
     }
     //Get All Messages Ohne types bekommt man nur 10 Messages???
     async getAllMessages(): Promise<FireFlyMessage[]> {
         const response = await this.rest.get<FireFlyMessage[]>(
-          `/namespaces/${this.ns}/messages?type=private&type=broadcast`
+            `/namespaces/${this.ns}/messages?type=private&type=broadcast`
         );
         return response.data;
     }
     //Retrives the actuall Message value (data)
     retrieveData(data: FireFlyDataIdentifier[]) {
         return Promise.all(data.map(d =>
-        this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
-        .then(response => response.data)));
+            this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
+                .then(response => response.data)));
     }
     //Upload data to own FireFly node
     async uploadData(data: any) {
         const response = await this.rest.post(`/namespaces/${this.ns}/data`, data,
-        {
-           headers: data.getHeaders() 
-        });
+            {
+                headers: data.getHeaders()
+            });
         return response.data.id
     }
     //Broadcast Data(PDF) to all 
@@ -179,13 +194,13 @@ export class FireFly {
     //Retireves Data Bloob from Data id 
     retrieveDataBlob(data: FireFlyDataIdentifier[]) {
         return Promise.all(data.map(d =>
-        this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}/blob`)
-        .then(response => response.data)));
+            this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}/blob`)
+                .then(response => response.data)));
     }
 
 
-  
+
 
 
 }
-      
+

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Landing Page</title>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+        integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="/css/mandant.css">
+</head>
+
+<body>
+
+    <h1 class="headline">Ihr Dashboard</h1>
+    <!--Damit der erste Buchstabe des Namens gross geschrieben wird-->
+    <h1>Hello <%= user.charAt(0).toUpperCase() + user.slice(1) %>
+    </h1>
+
+    <div class="status">
+        <h3>Status</h3>
+    </div>
+
+    <div class="wrapper">
+
+
+
+        <!-- Send messages to the blockchain -->
+        <div class="send_messages">
+            <h4>Senden Sie eine Nachricht</h4>
+            <h4>Private Message </h4>
+            <!--Send Message-->
+            <form action="/send_text_mandant" method=POST>
+                <label class="selector" for="recipient">Empfänger</label>
+                <!-- Add multiple to allow multiple selections -->
+                <select name="recipient" id="res" size="5">
+                    <optgroup label="Senden an">
+                        <option value="Broadcast" selected>An alle</option>
+                        <option value="Mandant">Mandant</option>
+                        <option value="Berater">Berater</option>
+                        <option value="Finanzamt">Finanzamt</option>
+                    </optgroup>
+                </select>
+                <br>
+                Nachricht: <input name="message" type="text" id="message"><br>
+                <button type="submit">SUBMIT</button>
+            </form>
+        </div>
+
+        <div class="send_docs">
+            <!-- Send Files to the Blockchain -->
+            <!-- direkt hinter file kann noch multiple gestellt werde -->
+            <div>
+                <h4>Senden Sie ihre Dokumente:</h4>
+                <form action="/upload-file" method="POST" enctype="multipart/form-data">
+                    <label for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select>
+                    <br>
+                    <input type="file" name="file">
+                    <input type="submit" value="Upload">
+                </form>
+            </div>
+
+            <div>
+                <h4>Senden Sie ihre Steuererklärung:</h4>
+                <form action="/upload-file" method="POST" enctype="multipart/form-data">
+                    <label for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <!-- <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select> -->
+                    <br>
+                    <input type="file" name="file">
+                    <input type="submit" value="Upload">
+                </form>
+            </div>
+            <div></div>
+            <div>
+                <h4>Senden Sie ihre Steuerbescheid:</h4>
+                <form action="/upload-file" method="POST" enctype="multipart/form-data">
+                    <label for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <!-- <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select> -->
+                    <br>
+                    <input type="file" name="file">
+                    <input type="submit" value="Upload">
+                </form>
+            </div>
+        </div>
+
+
+
+        <!-- Display Messages -->
+        <div class="msg">
+            <div>
+                <ul id="messages">
+                </ul>
+            </div>
+            <div>
+                <ul id="mymessages">
+                </ul>
+            </div>
+        </div>
+
+        <div class="sb">
+            <ul id="files">
+            </ul>
+
+        </div>
+
+        <div>
+            <a href="/users/logout">Logout</a>
+        </div>
+
+        <div class="Boxen">
+            <div class="box box1">box 1bis3 column rows</div>
+            <div class="box box2">box 2</div>
+            <div class="box box3">box 3</div>
+            <div class="box box4">box 4</div>
+        </div>
+
+
+
+        <script>
+            var socket = io.connect('http://localhost:2000');
+            var messages = document.getElementById('messages');
+            var mymessages = document.getElementById('mymessages');
+            var files = document.getElementById('files');
+            // const org_0 = { id: "did:firefly:org/a7de303c-4b75-4ec5-bba7-16ef9886e741", name: "Mandant" };
+            // const org_1 = { id: "did:firefly:org/8c7e05a2-a5d9-4a4a-954a-1bae547bd780", name: "Steuerberater" };
+            // const org_2 = { id: "did:firefly:org/99b93fa1-04d8-4214-bd96-ae426a2230e4", name: "Finanzamt" };
+            socket.on('chat message received', async function (infos) {
+                //console.log(infos);
+                var count = 0;
+                const orga = infos.orgas;
+                const org_0 = { id: orga[2].id, name: "Mandant" };
+                const org_1 = { id: orga[1].id, name: "Steuerberater" };
+                const org_2 = { id: orga[0].id, name: "Finanzamt" };
+                //console.log(org_0)
+                const user = infos.user;
+                const msg = infos.rows;
+                const pdfs = infos.file;
+                const d = new Date();
+                //Clear all elements in list so they dont get displayed multiple times
+                messages.innerHTML = "";
+                mymessages.innerHTML = "";
+                files.innerHTML = "";
+                //Handle PDFs => Missing: Wer hat an wen gesendet
+                for (var i of pdfs) {
+                    var pdf = new Blob(pdfs, { type: 'application/pdf' });
+                    var url = URL.createObjectURL(pdf);
+                    var a = document.createElement('a');
+                    //FIND OUT NAME OF THE PDF
+                    var linkText = document.createTextNode("File_0" + count);
+                    count += 1;
+                    a.appendChild(linkText);
+                    a.title = "title";
+                    a.download = "newFilename"
+                    a.href = url;
+                    files.appendChild(a);
+                    //Just for better look, can be handled by css 
+                    files.appendChild(document.createElement('br'))
+
+                }
+
+
+
+                //Handle and display messages
+                for (var i of msg) {
+                    var date = i.message.header.created
+                    var time = date.split("T")[1].split(".")[0].slice(0, -3)
+                    var value = time + "  " + i.data[0].value
+                    var sender = i.message.header.author.split("/")[1]
+                    //console.log(value)
+
+                    var item = document.createElement('li');
+                    item.textContent = value
+                    var name = document.createElement('li');
+                    if (sender == org_1.id) {
+                        //console.log("sender: " + org_0.name)
+                        name.textContent = org_1.name;
+                    } else {
+                        //console.log("Sender: " + org_2.name)
+                        name.textContent = org_2.name;
+                    }
+                    var empty = document.createElement('li');
+                    empty.textContent = ""
+
+                    console.log(sender + " = " + org_0.id)
+                    // console.log("sender: " + sender)
+                    // console.log("org: " +org_0)
+                    // mymessages.appendChild(item);
+
+                    if (sender == org_0.id) {
+                        mymessages.appendChild(item);
+                        messages.appendChild(empty);
+                    } else if (sender == org_1.id || sender == org_2.id) {
+                        messages.appendChild(name);
+                        messages.appendChild(item);
+                        mymessages.appendChild(empty);
+                    }
+                }
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+        </script>
+
+        <!-- Für Typescript benötigt  -->
+        <!-- Brauch ich die überhaupt???? -->
+        <script>var exports = {};</script>
+        <script src="https://rawgit.com/Microsoft/TypeScript/master/lib/typescriptServices.js"></script>
+        <script src="https://rawgit.com/basarat/typescript-script/master/transpiler.js"></script>
+    </div>
+
+
+</body>
+
+
+</html>

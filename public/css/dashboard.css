@@ -14,10 +14,16 @@ body {
     grid-gap: 1em;
 }
 
+.status {
+    display: grid;
+    grid-template-columns: 1fr;
+    background-color: greenyellow;
+}
+
 /* Now handle Grid */
 .wrapper{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr ;
     /* Set to seperate column/rows gap */
     /* grid-column-gap: 1em;
     grid-row-gap: 1em; */

@@ -19,8 +19,15 @@
     <h1 class="headline">Ihr Dashboard</h1>
     <!--Damit der erste Buchstabe des Namens gross geschrieben wird-->
     <h1>Hello <%= user.charAt(0).toUpperCase() + user.slice(1) %></h1>
+
+    <div class="status">
+        <h3>Status</h3>
+    </div>
         
     <div class="wrapper">
+
+
+
         <!-- Send messages to the blockchain -->
         <div class="send_messages">
             <h4>Senden Sie eine Nachricht</h4>
@@ -111,9 +118,9 @@
             var messages = document.getElementById('messages');
             var mymessages = document.getElementById('mymessages');
             var files = document.getElementById('files');
-            const org_0 = {id:"did:firefly:org/ca0fb065-cad3-4098-b5ca-236619e6b1a4", name:"Mandant"};
-            const org_1 = {id:"did:firefly:org/a7f8d304-81b7-4123-9ed4-5d13daa319fc", name:"Steuerberater"};
-            const org_2 ={id:"did:firefly:org/ed8218b3-46ff-41e5-ba82-30ea724abfa2", name:"Finanzamt"};
+            const org_0 = {id:"did:firefly:org/a7de303c-4b75-4ec5-bba7-16ef9886e741", name:"Mandant"};
+            const org_1 = {id:"did:firefly:org/8c7e05a2-a5d9-4a4a-954a-1bae547bd780", name:"Steuerberater"};
+            const org_2 ={id:"did:firefly:org/99b93fa1-04d8-4214-bd96-ae426a2230e4", name:"Finanzamt"};
             // var form = document.getElementById('form');
             // console.log(form);
             // var input = document.getElementById('input');
@@ -179,6 +186,8 @@
                             var time = date.split("T")[1].split(".")[0].slice(0,-3)
                             var value = time+"  "+i.data[0].value
 
+                            console.log(value)
+                            
 
 
                             var item = document.createElement('li');
@@ -187,6 +196,7 @@
                             var empty = document.createElement('li');
                             empty.textContent = ""
                             var sender = i.message.header.author
+                            console.log(sender + " = " + org_0.id)
                             // console.log("sender: " + sender)
                             // console.log("org: " +org_0)
                             switch(sender){
