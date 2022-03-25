@@ -28,24 +28,54 @@
 
         <!-- Send messages to the blockchain -->
         <div class="send_messages">
-            <h4>Senden Sie eine Nachricht</h4>
-            <h4>Private Message </h4>
-            <!--Send Message-->
-            <form action="/send_text_mandant" method=POST>
-                <label class="selector" for="recipient">Empfänger</label>
-                <!-- Add multiple to allow multiple selections -->
-                <select name="recipient" id="res" size="5">
-                    <optgroup label="Senden an">
-                        <option value="Broadcast" selected>An alle</option>
-                        <option value="Mandant">Mandant</option>
-                        <option value="Berater">Berater</option>
-                        <option value="Finanzamt">Finanzamt</option>
-                    </optgroup>
-                </select>
-                <br>
-                Nachricht: <input name="message" type="text" id="message"><br>
-                <button type="submit">SUBMIT</button>
+            <div>
+                <h4>Senden Sie eine Nachricht</h4>
+                <h4>Private Message </h4>
+                <!--Send Message-->
+                <form action="/send_text_mandant" method=POST>
+                    <label class="selector" for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select>
+                    <br>
+                    Nachricht: <input name="message" type="text" id="message"><br>
+                    <button type="submit">SUBMIT</button>
+                </form>
+            </div>
+            <form name="s_form">
+                <div class="vollmacht">
+                    <div class="setA">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'setAllg')">Allgemeine Vollmacht
+                            ausstellen</button>
+                    </div>
+                    <div class="setE">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'setEmpf')">Empfangsvollmacht
+                            ausstellen</button>
+                    </div>
+                    <div class="cancelA">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'cancelAllg')">Allgemeine Vollmacht
+                            Widerrufen</button>
+                    </div>
+                    <div class="cancelE">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'cancelEmpf')">Empfangsvollmacht
+                            Widerrufen</button>
+                    </div>
+                    <div id="div_error">
+                        <p id="error">
+
+                        </p>
+                    </div>
+
+                </div>
             </form>
+
+
         </div>
 
         <div class="send_docs">
@@ -134,13 +164,123 @@
         </div>
 
         <div class="Boxen">
-            <div class="box box1">box 1bis3 column rows</div>
-            <div class="box box2">box 2</div>
-            <div class="box box3">box 3</div>
-            <div class="box box4">box 4</div>
+            <div class="box1">box 1bis3 column rows</div>
+            <div class="box2">box 2</div>
+            <div class="box3">box 3</div>
+            <div class="box4">box 4</div>
         </div>
 
 
+        <script>
+            async function sicherheitsabfrage(obj, abc) {
+                const clear = document.getElementById("div_error");
+                clear.innerHTML = '';
+                //abc = className
+                const voll = {
+                    todo: Number
+                };
+                switch (abc) {
+                    case "setAllg":
+                        console.log("setAllg")
+                        let conf = confirm("Sind Sie sicher, dass Sie eine allgemeine Vollmacht ausstellen wollen?");
+                        if (conf) {
+                            //send vollmacht request to server
+                            voll.todo = 1;
+                            let result = await sendVoll(voll);
+                            console.log(result)
+                            //console.log("No result ??")
+                            if (result) {
+                                alert("Ihre Vollmacht wurde ausgestellt!")
+                            }
+                            else {
+
+                                let error = result.split(":")[2]
+                                displayerror(error)
+                                alert(error)
+                            }
+
+                        }
+                        break;
+                    case "setEmpf":
+                        let conf1 = confirm("Sind Sie sicher, dass Sie eine Empfangsvollmacht ausstellen wollen?");
+                        if (conf1) {
+                            //send vollmacht request to server
+                            voll.todo = 2;
+                            let result = await sendVoll(voll)
+                            console.log("Succes?: " + result)
+                            if (result == true) {
+                                console.log("i land here why?")
+                                alert("Ihre Empfangsvollmacht wurde ausgestellt!")
+                            }
+                            else {
+                                let error = result.split(":")[2]
+                                displayerror(error)
+                                alert(error)
+                            }
+                        }
+                        break;
+                    case "cancelAllg":
+                        let conf2 = confirm("Sind Sie sicher, dass Sie ihre allgemeine Vollmacht widerrufen wollen?");
+                        if (conf2) {
+                            //send vollmacht request to server
+                            voll.todo = 3;
+                            sendVoll(voll)
+                            alert("Ihre Vollmacht wurde widerrufen!")
+                        }
+                        break;
+                    case "cancelEmpf":
+                        let conf3 = confirm("Sind Sie sicher, dass Sie ihre Empfangsvollmacht widerrufen wollen?");
+                        if (conf3) {
+                            //send vollmacht request to server
+                            voll.todo = 4;
+                            sendVoll(voll)
+                            alert("Ihre Empfangsvollmacht wurde widerrufen!")
+                        }
+                        break;
+                }
+            }
+
+            async function sendVoll(voll) {
+                const response = await fetch('/vollmacht', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(voll),
+                })
+                //console.log(response)
+                const json = await response.json();
+                console.log(json)
+                if (json.status != "Failed") {
+                    return true;
+                } else {
+                    return json.error;
+                }
+
+                //Selbe wie oben
+                // fetch('/vollmacht', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     body: JSON.stringify(voll),
+                // })
+                //     .then(response => {
+                //         response.json().then(data => {
+                //             console.log(data.output)
+                //         })
+                //     })
+            }
+
+            function displayerror(e) {
+                const para = document.createElement("p");
+                const node = document.createTextNode(e);
+                para.appendChild(node);
+                const element = document.getElementById("div_error");
+                element.appendChild(para)
+
+            }
+        </script>
 
         <script>
             var socket = io.connect('http://localhost:2000');

@@ -80,6 +80,10 @@ export interface FireFlyOrga {
     name: string;
 }
 
+export interface FireFlyContract {
+    vollmacht: number;
+}
+
 
 // export interface FireFlyMessage {
 //     id: string;
@@ -135,11 +139,55 @@ export class FireFly {
         const response = await this.rest.get<FireFlyOrga[]>(
             `/network/organizations`
         );
-        // console.log("We are here");
-        // console.log(response.data)
         return response.data
     }
-
+    //Get Output from Operation_id
+    async getOutput(id: string) {
+        console.log("we get here")
+        const response = await this.rest.get(
+            `/namespaces/${this.ns}/operations/${id}`
+        );
+        return response.data;
+    }
+    //Get Vollmächte
+    async getVollmacht(): Promise<FireFlyContract[]> {
+        console.log("we get here")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/query/getVollmacht`, { input: { addr: "0xcb5bb153c00211bf8d14d10c78ff3532b1316976" } }
+        );
+        console.log("Vollmacht: " + response.data)
+        return response.data;
+    }
+    //Set Allgemeine Vollmacht
+    async setAllg() {
+        console.log("we get here")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/setAllg`, {}
+        );
+        return response.data;
+    }
+    //Set Empfangsvollmacht
+    async setEmpf() {
+        console.log("we get here")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/setEmpf`, {}
+        );
+        return response.data;
+    }
+    //Set Empfangsvollmacht
+    async cancelAllg() {
+        console.log("we get here")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/cancelAllg`, {}
+        );
+    }
+    //Set Empfangsvollmacht
+    async cancelEmpf() {
+        console.log("we get here")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/cancelEmpf`, {}
+        );
+    }
     //Send Braodcast
     async sendBroadcast(data: FireFlyMessageSend[]) {
         await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, { data });

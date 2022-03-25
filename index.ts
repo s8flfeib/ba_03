@@ -58,7 +58,7 @@ interface MessageRow {
 //const dataValues = (data: FireFlyData[]) => data.map( d => d.value);
 //const express = require( "express" );
 import * as path from 'path'
-import { convertToObject, ExitStatus, isNamedExportBindings, setConstantValue } from "typescript";
+import { convertToObject, ExitStatus, isNamedExportBindings, parseConfigFileTextToJson, setConstantValue } from "typescript";
 import axios from "axios";
 import { response } from "express";
 //var path = require('path')
@@ -124,109 +124,46 @@ async function main() {
         res.render('index', { user: "User" });
     })
 
-    //Send private Message and Broadcast between all Members!
-    app.post("/send_text", (req: any, res: any) => {
-        const message = JSON.stringify(req.body.message);
-        const sendData: FireFlyMessageSend[] = [
-            { value: message }
-        ]
-        var recipient = req.body.recipient;
-        const recipients: FireFlyMemberInput[] = [];
+    //Handle Vollmächte
+    app.post("/vollmacht", async (req: any, res: any) => {
+        console.log("Handel Vollmacht")
+        const vollmacht = parseInt(JSON.stringify(req.body.todo))
+        switch (vollmacht) {
+            case 1:
+                const response_1 = await firefly1.setAllg()
+                const id_1 = response_1.id
+                console.log(id_1)
+                const output_1 = await firefly1.getOutput(id_1)
+                console.log(output_1)
+                var sc = await firefly1.getVollmacht()
+                console.log(JSON.stringify(sc))
+                res.json(output_1)
+                break;
+            case 2:
+                const response_2 = await firefly1.setEmpf()
+                const id_2 = response_2.id
+                console.log(id_2)
+                const output_2 = await firefly1.getOutput(id_2)
+                console.log(output_2)
+                var sc = await firefly1.getVollmacht()
+                console.log(JSON.stringify(sc))
+                res.json(output_2)
+                break;
+            case 3:
+                await firefly1.cancelAllg()
+                var sc = await firefly1.getVollmacht()
+                console.log(JSON.stringify(sc))
+                break;
+            case 4:
+                await firefly1.cancelEmpf()
+                var sc = await firefly1.getVollmacht()
+                console.log(JSON.stringify(sc))
+                break;
 
-        console.log("Message recipient(s) is/are: " + recipient)
-        switch (recipient) {
-            case "Broadcast":
-                console.log("Broadcast")
-                switch (req.user.name) {
-                    case "Mandant":
-                        console.log("Send from M");
-                        firefly1.sendBroadcast(sendData);
-                        break;
-                    case "Steuerberater":
-                        console.log("Send from S");
-                        firefly2.sendBroadcast(sendData);
-                        break;
-                    case "Finanzamt":
-                        console.log("Send from F");
-                        firefly3.sendBroadcast(sendData);
-                        break;
-                }
-                break;
-            case "Mandant":
-                recipients.push({ identity: "org_0" });
-                switch (req.user.name) {
-                    case "Mandant":
-                        firefly1.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                    case "Steuerberater":
-                        firefly2.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                    case "Finanzamt":
-                        firefly3.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                }
-                break;
-            case "Berater":
-                recipients.push({ identity: "org_1" });
-                switch (req.user.name) {
-                    case "Mandant":
-                        firefly1.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                    case "Steuerberater":
-                        firefly2.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                    case "Finanzamt":
-                        firefly3.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                }
-                break;
-            case "Finanzamt":
-                recipients.push({ identity: "org_2" });
-                console.log(recipients)
-                switch (req.user.name) {
-                    case "Mandant":
-                        firefly1.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                    case "Steuerberater":
-                        firefly2.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                    case "Finanzamt":
-                        firefly3.sendPrivate({
-                            data: sendData,
-                            group: { members: recipients },
-                        });
-                        break;
-                }
-                break;
         }
-
-        res.redirect("/users/dashboard");
-    });
-
+        //res.redirect("/users/mandant")
+    })
+    //Send private Message and Broadcast between all Members!
     app.post("/send_text_mandant", (req: any, res: any) => {
         console.log("Send from Mandant")
         const message = JSON.stringify(req.body.message);

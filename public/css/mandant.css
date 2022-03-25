@@ -13,6 +13,25 @@ body {
     grid-template-columns: 50% 50%;
     grid-gap: 1em;
 }
+.vollmacht {
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+
+/* 
+.vollmacht > div {
+    background-color: lightcoral;
+}
+
+.vollmacht > div:nth-child(odd){
+    background-color: lightseagreen;
+} */
+
+.send_messages {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-gap: 1em;
+}
 
 .send_docs {
     display: grid;
@@ -56,6 +75,8 @@ body {
     
 }
 
+
+
 .Boxen > div{
     background-color: aqua;
     padding:1em;
@@ -82,7 +103,7 @@ body {
 .box4{
     /* We are able to overlap */
     grid-column: 1;
-    grid-row: 2/4;
+    grid-row: 1/4;
 }
 
 
