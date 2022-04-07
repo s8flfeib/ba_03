@@ -1,64 +1,115 @@
 @import url('https://fonts.googleapi.com/css2?family=Poppins:wght@400;500;600&display=swapt');
 
-body {
-    background-color: blueviolet;
-
-}
+body {}
 
 .header {
     background-color: gray;
-    position: relative;
+    color: #000;
+    height: 200px;
+}
+
+.head {
     display: flex;
-    height: 100px;
+    justify-content: space-between;
 }
 
-.header a {
-    position: absolute;
-    right: 25px;
-    height: 50px;
-    bottom: 25px;
+.head h1 {
+    margin-top: 15px;
+    margin-left: 15px;
 }
 
-.header h1 {
-    color: #fff;
-    position: absolute;
-    left: 25px;
-    font-size: 50px;
+.head a {
+    margin-top: 15px;
+    margin-right: 15px;
 }
 
 .status {
-    background-color: lightsalmon;
-}
-
-
-
-.sender {
+    height: 100px;
+    margin-top: 20px;
     display: flex;
-    background-color: lightblue;
+    justify-content: space-between;
+    margin-right: 30%;
 }
 
-.send_messages {
-    flex: 1;
+
+.status .m_sel select {
+    color: #000;
+    height: 35px;
+    width: 60%;
+    margin: 0 0 15px 15px;
 }
 
-/* .send_docs {
-    flex: 1;
-} */
-
-.sender>div:nth-child(odd) {
-    background-color: aquamarine;
+.status .m_sel label {
+    font-size: 25px;
+    color: #000;
+    height: 35px;
+    width: 75%;
+    margin: 15px 0 0 15px;
+    font-weight: normal;
 }
+
+.status .m_sel {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.status .m_sel .choose-mandant {
+    display: flex;
+    justify-content: space-between;
+}
+
+.status .m_sel .choose-mandant button {
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+.status .vollmacht {
+    width: 400px;
+}
+
+.status .vollmacht h2 {
+    font-size: 25px;
+    margin-top: 15px;
+    margin-left: 15px;
+}
+
+.status .vollmacht h3 {
+    font-size: 25px;
+    margin-bottom: 15px;
+    margin-left: 15px;
+}
+
+.status .state {
+    width: 400px;
+}
+
+.status .state h2 {
+    font-size: 25px;
+    margin-top: 15px;
+    margin-left: 15px;
+}
+
+.status .state h3 {
+    font-size: 25px;
+    margin-bottom: 15px;
+    margin-left: 15px;
+}
+
+
+
+
 
 
 
 .display {
     display: flex;
-    height: 800px;
 }
 
 .msg {
     width: 500px;
-    height: 800px;
+    height: 600px;
     background-color: white;
     overflow: hidden;
     border-radius: 10px;
@@ -73,6 +124,7 @@ body {
     height: 125px;
     background-color: #5bc0de;
     position: relative;
+    border-radius: 15px 15px 0 0;
 }
 
 .client-info {
@@ -154,7 +206,7 @@ body {
 /* chat section */
 .chats {
     background-color: lightgray;
-    height: 600px;
+    height: 500px;
     width: 100%;
     padding: 0 15px;
     color: #fff;
@@ -212,13 +264,8 @@ body {
     overflow: hidden;
     position: relative;
     margin-left: 5px;
-    /* cursor: pointer;
-    transition: 0.4s ease-in-out; */
 }
 
-/* .send-btn:active {
-    transform: scale(0.85);
-} */
 
 .send-btn img {
     width: 100%;
@@ -237,66 +284,36 @@ body {
 }
 
 /* Dokumenten Upload */
-.send_docs {
-    display: flex;
+
+.document-handler {
+    margin-left: 5px;
     width: 500px;
-    height: 800px;
-    background-color: white;
-    overflow: hidden;
-    border-radius: 10px;
-    position: relative;
+    height: 300px;
 }
 
-.drag-area {
+.select-file {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    justify-content: space-between;
     background-color: lightgray;
-    width: 500px;
-    height: 500px;
-    border: 2px dashed #4f5d73c7;
-    border-radius: 5px;
+    height: 200px;
 }
 
-.drag-area.active {
-    border: 2px solid #4f5d73c7;
-
+.select-file .send-btn {
+    width: 75px;
+    height: 50px;
+    margin-top: 15px;
+    margin-right: 15px;
 }
 
-.drag-area .icon {
-    font-size: 100px;
-    color: #4f5d73c7;
-}
-
-.drag-area header {
-    font-size: 30px;
-    font-weight: 500;
-    color: #4f5d73c7;
-}
-
-.drag-area span {
-    font-size: 25ps;
-    font-weight: 500;
-    color: #4f5d73c7;
-    margin: 10px 0 15px 0;
-}
-
-.drag-area button {
-    padding: 10px 25px;
-    font-size: 20px;
-    font-weight: 500;
-    border: none;
-    outline: none;
-    background: #4f5d73c7;
-    color: lightgray;
-    border-radius: 5px;
-    cursor: pointer;
-
+.select-file .file {
+    margin-top: 25px;
+    margin-left: 15px;
 }
 
 .display_files {
-    height: 300px;
+    height: 210px;
     width: 500px;
-    background-color: #008000;
+    background-color: lightgray;
+    display: flex;
+    justify-content: space-between;
 }

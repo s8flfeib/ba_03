@@ -1,6 +1,6 @@
 /* . fpr class und # für ids */
 body {
-    background-color: royalblue;
+    background-color: lightgray;
 }
 
 .selector {
@@ -17,13 +17,13 @@ body {
 .status {
     display: grid;
     grid-template-columns: 1fr;
-    background-color: greenyellow;
+    /* background-color: greenyellow; */
 }
 
 /* Now handle Grid */
-.wrapper{
+.wrapper {
     display: grid;
-    grid-template-columns: 1fr 1fr ;
+    grid-template-columns: 1fr 1fr;
     /* Set to seperate column/rows gap */
     /* grid-column-gap: 1em;
     grid-row-gap: 1em; */
@@ -42,58 +42,69 @@ body {
 
 
 
-.Boxen{
+.Boxen {
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
     grid-auto-rows: minmax(100px, auto);
     grid-gap: 1em;
-    
+
 }
 
-.Boxen > div{
+.Boxen>div {
     background-color: aqua;
-    padding:1em;
-}
-.Boxen > div:nth-child(odd){
-    background-color:greenyellow;
+    padding: 1em;
 }
 
-.box1{
+.Boxen>div:nth-child(odd) {
+    background-color: greenyellow;
+}
+
+.box1 {
     grid-column: 1/3;
     grid-row: 1/3;
 }
-.box2{
+
+.box2 {
     grid-column: 3;
     grid-row: 1/3;
 
 }
-.box3{
+
+.box3 {
     /* Changes order of box 3 and 4 */
     grid-column: 2/4;
-    grid-row:3;
+    grid-row: 3;
 
 }
-.box4{
+
+.box4 {
     /* We are able to overlap */
     grid-column: 1;
     grid-row: 2/4;
 }
 
 
-.wrapper > div {
+.wrapper>div {
     /* Gib allen weiteren div elementen dunkelgrau */
-    background-color: darkgray;
+    /* background-color: darkgray; */
     /* Platz zum Rand des dives */
-    padding:5em;   
-}
-.wrapper > div:nth-child(odd){
-    /*abwechselnd hell und dunkelgrau der div elemente*/
-    background-color: #eee;
+    padding: 5em;
 }
 
-.msg > div{
-    background-color: #2196f3;
+.wrapper>div:nth-child(odd) {
+    /*abwechselnd hell und dunkelgrau der div elemente*/
+    /* background-color: #eee; */
 }
-.msg >div:nth-child(odd){
-    background-color: aquamarine;
+
+/* .msg>div {
+    background-color: gray;
 }
+
+.msg>div:nth-child(odd) {
+    background-color: gray;
+}
+
+#messages {
+    list-style-type: none;
+    background-color: pink;
+} */

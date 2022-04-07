@@ -11,7 +11,7 @@
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
         integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
         crossorigin="anonymous"></script>
-    <link rel="stylesheet" type="text/css" href="/css/finanzamt.css">
+    <link rel="stylesheet" type="text/css" href="/css/basis.css">
 </head>
 
 <body>
@@ -28,12 +28,12 @@
         <!-- Status und Vollmacht Anzeige -->
         <div class="status-bar">
             <div class="selection">
-                <label for="Mandant">Mandanten:</label>
+                <label for="Mandant">Mandanten/Steuerberater:</label>
                 <!-- <form action="/select_mandant_steuerberater" method="POST"> -->
                 <div class="choose">
-                    <form action="/select_mandant_finanzamt" method="POST">
+                    <form action="/select_mandant/finanzamt" method="POST">
                         <select name="mandant" id="md">
-                            <option>Mandanten</option>
+                            <option>Mandanten/Steuerberater</option>
                         </select>
                         <button type="submit">Auswählen</button>
                     </form>
@@ -51,7 +51,7 @@
 
     <div class="display">
         <div class="messages">
-            <form action="/send_text_finanzamt" method=POST>
+            <form action="/send_text_steuerberater" method=POST>
                 <div class="clienthead">
                     <h2 id="M-Name1">Mandant_x</h2>
                     <div class="client">
@@ -59,7 +59,7 @@
                             <label for="recipient">Empfänger:</label>
                             <select name="recipient" id="res">
                                 <option value="Mandant">Mandant</option>
-                                <option value="Steuerberater">Steuerberater</option>
+                                <option value="Finanzamt">Finanzamt</option>
                                 <option value="Broadcast">An alle</option>
                             </select>
                         </div>
@@ -84,12 +84,14 @@
 
                 <!-- Input field to send messages -->
                 <div class="send_message">
+
                     <div class="chat-input">
                         <input name="message" type="text" placeholder="Nachricht">
                         <button class="send-btn" type="submit">
                             <img src="/img/send.jpg" alt="send-btn">
                         </button>
                     </div>
+
                 </div>
             </form>
         </div>
@@ -97,7 +99,7 @@
 
 
         <div class="documents">
-            <form action="/upload-file-finanzamt" method="POST" enctype="multipart/form-data">
+            <form action="/upload-file-steuerberater" method="POST" enctype="multipart/form-data">
                 <div class="clienthead">
                     <h2 id="M-Name2">Mandant_x</h2>
                     <div class="client">
@@ -105,7 +107,8 @@
                             <label for="recipient">Empfänger:</label>
                             <select name="recipient" id="res">
                                 <option value="Mandant">Mandant</option>
-                                <option value="Steuerberater">Steuerberater</option>
+                                <option value="Finanzamt">Finanzamt</option>
+                                <option value="Broadcast">An alle</option>
                             </select>
                         </div>
                         <div class="choose">
@@ -120,6 +123,7 @@
                     <div class="docs_type">
                         <label for="Mandant">Dokummentenart:</label>
                         <select name="document_type" id="doc_type">
+                            <option>Steuererklärung</option>
                             <option>Steuerbescheid</option>
                         </select>
                     </div>

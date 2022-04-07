@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Landing Page</title>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+        integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="/css/mandant.css">
+</head>
+
+<body>
+
+    <h1 class="headline">Ihr Dashboard</h1>
+    <!--Damit der erste Buchstabe des Namens gross geschrieben wird-->
+    <h1>Hello <%= user.charAt(0).toUpperCase() + user.slice(1) %>
+    </h1>
+
+    <div class="header">
+        <div>
+            <h2>Ihr aktueller Steuerberater ist <%= sb.charAt(0).toUpperCase() + sb.slice(1) %>
+            </h2>
+        </div>
+        <div id="logout">
+            <a href="/users/logout" class="btn btn-info btn-lg">
+                <span class="glyphicon glyphicon-log-out"></span> Log out
+            </a>
+        </div>
+    </div>
+
+
+    <div class="status">
+        <div id="vollmacht">
+            <h3>Vollmächte:</h3>
+        </div>
+        <div id="status">
+            <h3>Status:</h3>
+        </div>
+
+    </div>
+
+    <div name="Auswahl Steuerberater">
+        <form action="/set_sb" method="POST" enctype="multipart/form-data">
+            <label for="Steuerberater">Wählen Sie ihren Steuerberater:</label>
+            <select name="steuerberater" id="sb">
+                <option value="Org_1">Steuerberater_0rg1</option>
+                <option value="Org_x">Steuerberater_Orgx</option>
+                <option value="Org_x1">Steuerberater_Orgx2</option>
+                <option value="Org_x2">Steuerberater_Orgx3</option>
+            </select>
+            <button type="submit">Auswahl bestätigen!</button>
+        </form>
+
+    </div>
+
+
+
+    <div class="wrapper">
+        <!-- Send messages to the blockchain -->
+        <div class="send_messages">
+            <div>
+                <h4>Senden Sie eine Nachricht</h4>
+                <!--Send Message-->
+                <form action="/send_text_mandant" method=POST>
+                    <label class="selector" for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select>
+                    <br>
+                    Nachricht: <input name="message" type="text" id="input_message"><br>
+                    <button type="submit">SUBMIT</button>
+                </form>
+            </div>
+
+            <form name="s_form">
+                <div class="vollmacht">
+                    <div class="setA">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'setAllg')">Allgemeine Vollmacht
+                            ausstellen</button>
+                    </div>
+                    <div class="setE">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'setEmpf')">Empfangsvollmacht
+                            ausstellen</button>
+                    </div>
+                    <div class="cancelA">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'cancelAllg')">Allgemeine Vollmacht
+                            Widerrufen</button>
+                    </div>
+                    <div class="cancelE">
+                        <button type="button" onclick="sicherheitsabfrage(this, 'cancelEmpf')">Empfangsvollmacht
+                            Widerrufen</button>
+                    </div>
+                    <div id="div_error">
+                        <p id="error">
+
+                        </p>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="send_docs">
+            <!-- Send Files to the Blockchain -->
+            <!-- direkt hinter file kann noch multiple gestellt werde -->
+            <div>
+                <h4>Senden Sie ihre Dokumente:</h4>
+                <form action="/upload-file" method="POST" enctype="multipart/form-data">
+                    <label for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select>
+                    <br>
+                    <input type="file" name="file">
+                    <input type="submit" value="Upload">
+                </form>
+            </div>
+
+            <div>
+                <h4>Senden Sie ihre Steuererklärung:</h4>
+                <form action="/upload-file" method="POST" enctype="multipart/form-data">
+                    <label for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <!-- <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select> -->
+                    <br>
+                    <input type="file" name="file">
+                    <input type="submit" value="Upload">
+                </form>
+            </div>
+            <div></div>
+            <div>
+                <h4>Senden Sie ihre Steuerbescheid:</h4>
+                <form action="/upload-file" method="POST" enctype="multipart/form-data">
+                    <label for="recipient">Empfänger</label>
+                    <!-- Add multiple to allow multiple selections -->
+                    <!-- <select name="recipient" id="res" size="5">
+                        <optgroup label="Senden an">
+                            <option value="Broadcast" selected>An alle</option>
+                            <option value="Mandant">Mandant</option>
+                            <option value="Berater">Berater</option>
+                            <option value="Finanzamt">Finanzamt</option>
+                        </optgroup>
+                    </select> -->
+                    <br>
+                    <input type="file" name="file">
+                    <input type="submit" value="Upload">
+                </form>
+            </div>
+        </div>
+
+
+
+        <!-- Display Messages -->
+        <div class="msg">
+            <div>
+                <ul id="messages">
+                </ul>
+            </div>
+            <div>
+                <ul id="mymessages">
+                </ul>
+            </div>
+        </div>
+
+        <div class="sb">
+            <ul id="files">
+            </ul>
+
+        </div>
+
+
+
+        <!-- <div class="Boxen">
+            <div class="box1">box 1bis3 column rows</div>
+            <div class="box2">box 2</div>
+            <div class="box3">box 3</div>
+            <div class="box4">box 4</div>
+        </div> -->
+
+
+        <script name="Vollmacht">
+            async function sicherheitsabfrage(obj, abc) {
+                const clear = document.getElementById("div_error");
+                const v = document.getElementById('vollmacht');
+                const s = document.getElementById('status')
+                v.innerHTML = '';
+                clear.innerHTML = '';
+                s.innerHTML = '';
+                var h3_e = document.createElement('h3');
+                h3_e.innerHTML = "Vollmächte: "
+                var h4_e = document.createElement('h4');
+                var h3_s = document.createElement('h3');
+                h3_s.innerHTML = "Status: "
+                var h4_s = document.createElement('h4');
+
+                //abc = className
+                const voll = {
+                    todo: Number
+                };
+                switch (abc) {
+                    case "setAllg":
+                        console.log("setAllg")
+                        let conf = confirm("Sind Sie sicher, dass Sie eine allgemeine Vollmacht ausstellen wollen?");
+                        if (conf) {
+                            //send vollmacht request to server
+                            voll.todo = 1;
+                            let result = await sendVoll(voll);
+                            console.log(result)
+                            const state = result.state
+                            const return_status = result.out.status
+                            h4_s.innerHTML = state
+                            //console.log("No result ??")
+                            if (return_status != "Failed") {
+                                h4_e.innerHTML = "Es liegt eine allgemeine Vollmacht vor!"
+                                v.append(h3_e);
+                                v.append(h4_e);
+                                s.append(h3_s);
+                                s.append(h4_s);
+                                alert("Ihre Vollmacht wurde ausgestellt!")
+                            }
+                            else {
+                                const err = result.out.error
+                                v.append(h3_e);
+                                s.append(h3_s);
+                                let e = err.split(":")[2]
+                                displayerror(e)
+                                alert(e)
+                            }
+
+                        }
+                        break;
+                    case "setEmpf":
+                        let conf1 = confirm("Sind Sie sicher, dass Sie eine Empfangsvollmacht ausstellen wollen?");
+                        if (conf1) {
+                            //send vollmacht request to server
+                            voll.todo = 2;
+                            let result = await sendVoll(voll)
+                            const state = result.state
+                            const return_status = result.out.status
+                            h4_s.innerHTML = state
+                            console.log(result)
+                            if (return_status != "Failed") {
+                                h4_e.innerHTML = "Es liegt eine Empfangsvollmacht vor!"
+                                v.append(h3_e);
+                                v.append(h4_e);
+                                s.append(h3_s);
+                                s.append(h4_s);
+                                alert("Ihre Empfangsvollmacht wurde ausgestellt!")
+                            }
+                            else {
+                                const err = result.out.error
+                                v.append(h3_e);
+                                s.append(h3_s);
+                                let e = err.split(":")[2]
+                                displayerror(e)
+                                alert(e)
+                            }
+                        }
+                        break;
+                    case "cancelAllg":
+                        let conf2 = confirm("Sind Sie sicher, dass Sie ihre allgemeine Vollmacht widerrufen wollen?");
+                        if (conf2) {
+                            //send vollmacht request to server
+                            voll.todo = 3;
+                            let result = await sendVoll(voll)
+                            const state = result.state
+                            const return_status = result.out.status
+                            h4_s.innerHTML = state
+                            console.log(return_status)
+                            if (return_status != "Failed") {
+                                h4_e.innerHTML = "Es liegt keine Vollmacht vor!"
+                                v.append(h3_e);
+                                v.append(h4_e);
+                                s.append(h3_s);
+                                s.append(h4_s);
+                                alert("Ihre Vollmacht wurde widerrufen!")
+                            }
+                            else {
+                                const err = result.out.error
+                                v.append(h3_e);
+                                s.append(h3_s);
+                                let e = err.split(":")[2]
+                                displayerror(e)
+                                alert(e)
+                            }
+                        }
+                        break;
+                    case "cancelEmpf":
+                        let conf3 = confirm("Sind Sie sicher, dass Sie ihre Empfangsvollmacht widerrufen wollen?");
+                        if (conf3) {
+                            //send vollmacht request to server
+                            voll.todo = 4;
+                            let result = await sendVoll(voll)
+                            const state = result.state
+                            const return_status = result.out.status
+                            h4_s.innerHTML = state
+                            if (return_status != "Failed") {
+                                h4_e.innerHTML = "Es liegt eine allgemeine Vollmacht vor!"
+                                v.append(h3_e);
+                                v.append(h4_e);
+                                s.append(h3_s);
+                                s.append(h4_s);
+                                alert("Ihre Empfangsvollmacht wurde widerrufen!")
+                            }
+                            else {
+                                const err = result.out.error
+                                v.append(h3_e);
+                                s.append(h3_s);
+                                let e = err.split(":")[2]
+                                displayerror(e)
+                                alert(e)
+                            }
+                        }
+                        break;
+                }
+            }
+
+            async function sendVoll(voll) {
+                const response = await fetch('/vollmacht', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(voll),
+                })
+                //console.log(response)
+                const json = await response.json();
+                console.log(json)
+                if (json.out.status != "Failed") {
+                    return json;
+                } else {
+                    console.log("Request failed!")
+                    return json;
+                }
+
+                //Selbe wie oben
+                // fetch('/vollmacht', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     body: JSON.stringify(voll),
+                // })
+                //     .then(response => {
+                //         response.json().then(data => {
+                //             console.log(data.output)
+                //         })
+                //     })
+            }
+
+            function displayerror(e) {
+                const para = document.createElement("p");
+                const node = document.createTextNode(e);
+                para.appendChild(node);
+                const element = document.getElementById("div_error");
+                element.appendChild(para)
+
+            }
+        </script>
+
+
+
+        <script name="Msg & Docs">
+            var socket = io.connect('http://localhost:2000');
+            var messages = document.getElementById('messages');
+            var mymessages = document.getElementById('mymessages');
+            var files = document.getElementById('files');
+            var sb = document.getElementById('sb');
+            var v = document.getElementById('vollmacht')
+            var s = document.getElementById('status')
+            socket.on('chat message received', async function (infos) {
+                console.log(infos);
+                console.log(infos.orgas[0].name)
+                var count = 0;
+                const orga = infos.orgas;
+                const org_0 = { id: orga[2].name, name: "Mandant" };
+                const org_1 = { id: orga[1].name, name: "Steuerberater" };
+                const org_2 = { id: orga[0].name, name: "Finanzamt" };
+                //console.log(org_0)
+                const status = infos.state;
+                const voll = infos.voll;
+                const steuerberater = infos.sb;
+                const user = infos.user;
+                const msg = infos.rows;
+                const pdfs = infos.file;
+                const d = new Date();
+                //Clear all elements in list so they dont get displayed multiple times
+                messages.innerHTML = "";
+                mymessages.innerHTML = "";
+                files.innerHTML = "";
+                sb.innerHTML = "";
+                v.innerHTML = "";
+                s.innerHTML = "";
+                var h3_status = document.createElement('h3');
+                var h4_status = document.createElement('h4');
+                h3_status.innerHTML = "Status: "
+                h4_status.innerHTML = status
+                s.appendChild(h3_status);
+                s.appendChild(h4_status);
+                var h3_element = document.createElement('h3');
+                var h4_element = document.createElement('h4');
+                h3_element.innerHTML = "Vollmächte: "
+                console.log("Voll: " + voll.output)
+                switch (voll.output) {
+                    case "0":
+                        console.log("we get here")
+                        h4_element.innerHTML = "Es liegen keine Vollmächte vor!"
+                        v.append(h3_element)
+                        v.append(h4_element)
+                        break;
+                    case "1":
+                        h4_element.innerHTML = "Es liegt eine allgemeine Vollmacht vor!"
+                        v.append(h3_element)
+                        v.append(h4_element)
+                        break;
+                    case "2":
+                        h4_element.innerHTML = "Es liegt eine Empfangsvollmacht vor!"
+                        v.append(h3_element)
+                        v.append(h4_element)
+                        break;
+                }
+                //HAndle SB
+                for (var i of steuerberater) {
+                    var sb_element = document.createElement('option');
+                    sb_element.value = i.name;
+                    sb_element.innerHTML = i.name;
+                    sb.appendChild(sb_element)
+
+                }
+
+                //Handle PDFs => Missing: Wer hat an wen gesendet
+                for (var i of pdfs) {
+                    var pdf = new Blob(pdfs, { type: 'application/pdf' });
+                    var url = URL.createObjectURL(pdf);
+                    var a = document.createElement('a');
+                    //FIND OUT NAME OF THE PDF
+                    var linkText = document.createTextNode("File_0" + count);
+                    count += 1;
+                    a.appendChild(linkText);
+                    a.target = "_blank";
+                    a.title = "title";
+                    a.download = "newFilename";
+                    a.href = url;
+                    files.appendChild(a);
+                    //Just for better look, can be handled by css 
+                    files.appendChild(document.createElement('br'))
+
+                }
+
+
+                //Handle and display messages
+                for (var i of msg) {
+                    var date = i.message.header.created
+                    var time = date.split("T")[1].split(".")[0].slice(0, -3)
+                    var value = time + "  " + i.data[0].value
+                    var sender = i.message.header.author.split("/")[1]
+                    //console.log(value)
+
+                    var item = document.createElement('li');
+                    item.textContent = value
+                    var name = document.createElement('li');
+                    if (sender == org_1.id) {
+                        //console.log("sender: " + org_0.name)
+                        name.textContent = org_1.name;
+                    } else {
+                        //console.log("Sender: " + org_2.name)
+                        name.textContent = org_2.name;
+                    }
+
+
+                    var empty = document.createElement('li');
+                    empty.textContent = ""
+                    var empty2 = document.createElement('li');
+                    empty2.textContent = ""
+
+                    //console.log(sender + " = " + org_0.id)
+                    // console.log("sender: " + sender)
+                    // console.log("org: " +org_0)
+                    // mymessages.appendChild(item);
+
+                    if (sender == org_0.id) {
+                        mymessages.appendChild(item);
+                        messages.appendChild(empty);
+                    } else if (sender == org_1.id || sender == org_2.id) {
+                        mymessages.appendChild(empty);
+                        messages.appendChild(name);
+                        messages.appendChild(item);
+                        mymessages.appendChild(empty2);
+                    }
+                }
+                window.scrollTo(0, document.body.scrollHeight);
+            });
+        </script>
+
+        <script>
+            async function setSB() {
+                console.log("WE are here")
+                //Selected Steuerberaterswitch
+                await fetch("/set_sb", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ "test": "t" })
+                }).catch((err) => {
+                    console.log(err)
+                })
+
+            } 
+        </script>
+
+        <script>
+            async function postData(url, data) {
+                console.log("Send Data")
+                console.log(url + " : " + data)
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                return response.json();
+            }
+        </script>
+
+        <!-- Für Typescript benötigt  -->
+        <!-- Brauch ich die überhaupt???? -->
+        <script>var exports = {};</script>
+        <script src="https://rawgit.com/Microsoft/TypeScript/master/lib/typescriptServices.js"></script>
+        <script src="https://rawgit.com/basarat/typescript-script/master/transpiler.js"></script>
+    </div>
+
+
+</body>
+
+
+</html>

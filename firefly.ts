@@ -133,6 +133,21 @@ export class FireFly {
     public getfirefly() {
         return this.port
     }
+    //identities
+    //http://127.0.0.1:5000/api/v1/namespaces/ff_system/identities
+    async getIDs(): Promise<any> {
+        const response = await this.rest.get(
+            `/namespaces/ff_system/identities`
+        );
+        return response.data
+    }
+    //http://127.0.0.1:5000/api/v1/namespaces/ff_system/identities/97daac5f-8049-4f1b-9d04-7cccdfcee646/verifiers
+    async getHex(id: number): Promise<any> {
+        const response = await this.rest.get(
+            `/namespaces/ff_system/identities/${id}/verifiers`
+        );
+        return response.data
+    }
 
     //Get organizations
     async getOrga(): Promise<FireFlyOrga[]> {
@@ -149,44 +164,133 @@ export class FireFly {
         );
         return response.data;
     }
-    //Get Vollmächte
-    async getVollmacht(): Promise<FireFlyContract[]> {
-        console.log("we get here")
+    //Set SB
+    async setSB(address: string, sender_address: string) {
+        console.log("Set SB in SC")
         const response = await this.rest.post(
-            `/namespaces/default/apis/mycontract/query/getVollmacht`, { input: { addr: "0xcb5bb153c00211bf8d14d10c78ff3532b1316976" } }
+            `/namespaces/default/apis/mycontract/invoke/setSB`, {
+            input: {
+                addr: address,
+                sender: sender_address
+
+            }
+        }
         );
-        console.log("Vollmacht: " + response.data)
+        // console.log(response.data)
         return response.data;
+    }
+    //Get SB
+    async getSB(sender: string): Promise<string> {
+        //console.log("we get here")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/query/getSB`, {
+            input: {
+                sender: sender
+            }
+        });
+        return response.data.output;
+    }
+    //init_Mandant
+    async init_M(address: string): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/init_Mandant`, { input: { addr: address } });
+        return response.data;
+    }
+    //files_send
+    async files_send(address: string): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/files_send`, { input: { addr: address } });
+        return response.data;
+    }
+    //files_received
+    async files_received(address: string, sender: string): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/files_received`, { input: { addr: address, sender: sender } });
+        return response.data;
+    }
+    //taxdec_send
+    async taxdec_send(address: string, sender: string): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/taxdec_send`, { input: { addr: address, sender: sender } });
+        return response.data;
+    }
+    //taxdec_received
+    async taxdec_received(address: string, sender: string): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/taxdec_received`, { input: { addr: address, sender: sender } });
+        console.log(response.data)
+        return response.data;
+    }
+    //taxnote_send
+    async taxnote_send(address: string, sender: string): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/taxnote_send`, { input: { addr: address, sender: sender } });
+        console.log(response.data)
+        return response.data;
+    }
+    //taxnote_send
+    async taxnote_received(address: string, sender: string): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/taxnote_received`, { input: { addr: address, sender: sender } });
+        console.log(response.data)
+        return response.data;
+    }
+    async filesSend(): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/files_send`, {});
+        return response.data;
+    }
+    //Get State
+    async getState(address: string): Promise<number> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/query/getState`, {
+            input: {
+                addr: address
+            }
+
+        });
+        return response.data.output;
+    }
+    //Get Vollmächte
+    async getVollmacht(address: string): Promise<string> {
+        // console.log("we get here")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/query/getVollmacht`, { input: { addr: address } }
+        );
+        // console.log("Vollmacht: " + response.data)
+        return response.data.output;
     }
     //Set Allgemeine Vollmacht
-    async setAllg() {
+    async setAllg(addr: string) {
         console.log("we get here")
         const response = await this.rest.post(
-            `/namespaces/default/apis/mycontract/invoke/setAllg`, {}
+            `/namespaces/default/apis/mycontract/invoke/setAllg`, { input: { sender: addr } }
         );
         return response.data;
     }
     //Set Empfangsvollmacht
-    async setEmpf() {
+    async setEmpf(addr: string) {
         console.log("we get here")
         const response = await this.rest.post(
-            `/namespaces/default/apis/mycontract/invoke/setEmpf`, {}
+            `/namespaces/default/apis/mycontract/invoke/setEmpf`, { input: { sender: addr } }
         );
         return response.data;
     }
     //Set Empfangsvollmacht
-    async cancelAllg() {
+    async cancelAllg(addr: string) {
         console.log("we get here")
         const response = await this.rest.post(
-            `/namespaces/default/apis/mycontract/invoke/cancelAllg`, {}
+            `/namespaces/default/apis/mycontract/invoke/cancelAllg`, { input: { sender: addr } }
         );
+        return response.data
     }
     //Set Empfangsvollmacht
-    async cancelEmpf() {
+    async cancelEmpf(addr: string) {
         console.log("we get here")
         const response = await this.rest.post(
-            `/namespaces/default/apis/mycontract/invoke/cancelEmpf`, {}
+            `/namespaces/default/apis/mycontract/invoke/cancelEmpf`, { input: { sender: addr } }
         );
+        return response.data
     }
     //Send Braodcast
     async sendBroadcast(data: FireFlyMessageSend[]) {
@@ -194,6 +298,8 @@ export class FireFly {
     }
     //Send private Message
     async sendPrivate(privateMessage: FireFlyMessageInput): Promise<void> {
+        console.log(privateMessage)
+        console.log(privateMessage.group.members[0])
         await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
     }
     //Get Messages Limit Broadcast & Private
@@ -215,14 +321,6 @@ export class FireFly {
         return Promise.all(data.map(d =>
             this.rest.get<FireFlyData>(`/namespaces/${this.ns}/data/${d.id}`)
                 .then(response => response.data)));
-    }
-    //Upload data to own FireFly node
-    async uploadData(data: any) {
-        const response = await this.rest.post(`/namespaces/${this.ns}/data`, data,
-            {
-                headers: data.getHeaders()
-            });
-        return response.data.id
     }
     //Broadcast Data(PDF) to all 
     async broadcastData(data: FireFlyDataSend[]) {
@@ -247,6 +345,25 @@ export class FireFly {
     }
 
 
+
+    //----------------FireFly send Message---------------//
+    //Send a private message
+    async privateMessage(privateMessage: any): Promise<void> {
+        await this.rest.post(`/namespaces/${this.ns}/messages/private`, privateMessage);
+    }
+    //Upload data local FireFly node
+    async uploadData(data: any) {
+        const response = await this.rest.post(`/namespaces/${this.ns}/data`, data,
+            {
+                headers: data.getHeaders()
+            });
+        return response.data.id
+    }
+    //Broadcast a message
+    async broadcastMessage(data: any) {
+        console.log(data)
+        await this.rest.post(`/namespaces/${this.ns}/messages/broadcast`, data);
+    }
 
 
 
