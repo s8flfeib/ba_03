@@ -70,6 +70,26 @@ enum Authorizationtype {
     BEIDES
 }
 
+const next_step_mandant = {
+    start: "Bitte wählen Sie einen Steuerberater oder senden Sie ihre Unterlagen/Steuererklärung an das Finanzamt.",
+    send_u: "Bitte senden Sie ihre Unterlagen an ihren Steuerberater.",
+    wait: "Bitte warten Sie auf den Steuerbescheid.",
+    end: "Steuerbescheid erhalten, Prozess Beendet"
+}
+
+const next_step_steuerberater = {
+    start: "Bitte warte Sie auf Unterlagen des Mandanten.",
+    send_se: "Bitte senden Sie die Steuererklärung.",
+    wait: "Bitte warten Sie auf den Steuerbescheid.",
+    end: "Prozess beendet!"
+}
+
+const next_step_finanzamt = {
+    start: "Bitte warten Sie auf die Steuererklärung.",
+    send_sb: "Bitte senden Sie den Steuerbescheid.",
+    end: "Steuerbescheid gesendet. Prozess beendet!"
+}
+
 interface Informations {
     client: {
         name: string;
@@ -81,7 +101,8 @@ interface Informations {
     voll: object,
     state: object,
     md: object[],
-    user: object
+    user: object,
+    next_step: string
 }
 
 interface Client_Informations {
@@ -246,10 +267,23 @@ async function main() {
         informations.voll = { vollmacht: voll_value };
         informations.state = { state: state_value };
         informations.user = { name: req.user.name, id: req.user.id, did: user_did }
-
         //Alle Mandante die zum Finanzbeamter gehören
         const mandanten = await getUserbyRole("M");
         informations.md = mandanten;
+        //Next_steps
+        if (state <= 4) {
+            informations.next_step = next_step_finanzamt.start;
+        }
+        if (state > 4 && state < 6) {
+            console.log("we get here")
+            informations.next_step = next_step_finanzamt.send_sb
+        }
+        if (state >= 6) {
+            informations.next_step = next_step_finanzamt.end;
+        }
+
+
+
 
         sendInfosBack(informations);
         res.redirect("users/finanzamt")
@@ -341,8 +375,8 @@ async function main() {
             const informations: Informations = {} as any;
             const client_did = await getDIDByName(req.user.name)
             const allmessages = await getMessages(firefly);
-            const clinet_state = await firefly.getState(m_key);
-            if (clinet_state == 6) {
+            const client_state = await firefly.getState(m_key);
+            if (client_state == 6) {
                 firefly.taxnote_received(m_key, m_key)
             }
             const new_state = await firefly.getState(m_key);
@@ -352,6 +386,17 @@ async function main() {
             informations.rows = allmessages;
             informations.file = pdfs;
             informations.state = { state: state_value }
+            //Next_stop
+            console.log(client_state)
+            if (client_state == 2 || client_state == 1) {
+                informations.next_step = next_step_mandant.send_u;
+            }
+            if (client_state >= 3 && client_state < 7) {
+                informations.next_step = next_step_mandant.wait;
+            }
+            if (client_state == 7) {
+                informations.next_step = next_step_mandant.end;
+            }
             displayCommunicationFAMA(informations)
             sendInfos(user_name, client_information);
         } else {
@@ -362,8 +407,8 @@ async function main() {
             const informations: Informations = {} as any;
             const client_did = await getDIDByName(req.user.name);
             const allmessages = await getMessages(firefly);
-            const clinet_state = await firefly.getState(m_key);
-            if (clinet_state == 6) {
+            const client_state = await firefly.getState(m_key);
+            if (client_state == 6) {
                 firefly.taxnote_received(m_key, m_key)
             }
             const new_state = await firefly.getState(m_key);
@@ -378,6 +423,19 @@ async function main() {
             informations.state = { state: state_value }
             informations.voll = { vollmacht: voll_value }
             informations.sb = [{ current_sb: sb_name }]
+            //Next_stop
+            console.log("NEXT STEP: " + client_state)
+            if (client_state == 2 || client_state == 1) {
+                informations.next_step = next_step_mandant.send_u;
+            }
+            if (client_state >= 3 && client_state < 7) {
+                informations.next_step = next_step_mandant.wait;
+            }
+            if (client_state == 7) {
+                console.log("CHECK")
+                informations.next_step = next_step_mandant.end;
+            }
+
             displayCommunication(informations);
             sendInfos(user_name, client_information);
         }
@@ -413,8 +471,8 @@ async function main() {
         const informations: Informations = {} as any;
         const client_did = await getDIDByName(req.user.name);
         const allmessages = await getMessages(firefly);
-        const clinet_state = await firefly.getState(m_key);
-        const state_value = Process_State[clinet_state];
+        const client_state = await firefly.getState(m_key);
+        const state_value = Process_State[client_state];
         const pdfs = await getFiles(firefly);
         const voll = await firefly.getVollmacht(m_key);
         const voll_value = Authorizationtype[parseInt(voll)]
@@ -424,6 +482,16 @@ async function main() {
         informations.state = { state: state_value }
         informations.voll = { vollmacht: voll_value }
         informations.sb = [{ current_sb: sb_name }]
+        //Next_stop
+        if (client_state == 2 || client_state == 1) {
+            informations.next_step = next_step_mandant.send_u;
+        }
+        if (client_state >= 3 && client_state < 7) {
+            informations.next_step = next_step_mandant.wait;
+        }
+        if (client_state == 7) {
+            informations.next_step == next_step_mandant.end;
+        }
         displayCommunication(informations);
         sendInfos(user_name, client_information);
         //////////////////////////////////////////////////
@@ -526,8 +594,8 @@ async function main() {
         const firefly = firefly3;
         const doc_type = req.body.document_type;
         const m_key = await getEthIdByName(req.user.name);
-        const current_sb = await firefly3.getSB(m_key)
-        const current_voll = await firefly3.getVollmacht(m_key);
+        const current_sb = await firefly.getSB(m_key)
+        const current_voll = await firefly.getVollmacht(m_key);
         const recipient = req.body.recipient;
         const data = req.files.file
         //Upload Data zu privatem Firefly node
@@ -549,6 +617,10 @@ async function main() {
         if (doc_type == "Steuererklärung" && recipient == "Finanzamt") {
             if (current_sb == "0x0000000000000000000000000000000000000000" || current_voll == "0") {
                 //Send private Message with Doc_id to FA
+                console.log("We are here!")
+                console.log(m_key)
+                const test = await firefly.taxdec_send(m_key, m_key)
+                console.log(test)
                 await private_unterlagen_FA(data_id, firefly, recipient);
             } else {
                 //Send alert over socket => Kommunikation über SB oder widerrufen Sie die Vollmacht
@@ -646,7 +718,19 @@ async function main() {
         informations.voll = { vollmacht: voll_value };
         informations.state = { state: state_value };
         informations.user = { name: req.user.name, id: req.user.id, did: user_did }
-
+        //next_step
+        if (state <= 2) {
+            informations.next_step = next_step_steuerberater.start;
+        }
+        if (state == 3) {
+            informations.next_step = next_step_steuerberater.send_se;
+        }
+        if (state >= 4 && state < 7) {
+            informations.next_step = next_step_steuerberater.wait;
+        }
+        if (state == 7) {
+            informations.next_step = next_step_steuerberater.end;
+        }
         //Alle Mandante die zum Finanzbeamter gehören
         //const mandanten = await getUserbyRole("M");
         const mandanten = await getMyMandants(user_id);

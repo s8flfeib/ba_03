@@ -52,6 +52,7 @@ socket.on('send informations from F', async function (infos) {
     h1.innerHTML = infos.client.name;
     name.appendChild(h);
     name1.appendChild(h1);
+    displayNextStep(infos.next_step)
 });
 
 socket.on('send informations from SB', async function (infos) {
@@ -80,6 +81,7 @@ socket.on('send informations from SB', async function (infos) {
     h1.innerHTML = infos.client.name;
     name.appendChild(h);
     name1.appendChild(h1);
+    displayNextStep(infos.next_step)
 });
 
 socket.on('display infos without selected sb', async function (infos) {
@@ -106,6 +108,7 @@ socket.on('display mandant', async function (infos) {
     displayDocuments(infos.file)
     displayStatus(infos.state.state);
     displayVollmacht(infos.voll.vollmacht)
+    displayNextStep(infos.next_step)
 })
 
 
@@ -265,4 +268,14 @@ function displayCurrentSb(sb) {
     c_sb2.value = sb;
     sb1.appendChild(c_sb1);
     sb2.appendChild(c_sb2);
+}
+
+function displayNextStep(next_step) {
+    console.log(next_step)
+    var next = document.getElementById('next_step');
+    next.innerHTML = '';
+    var n = document.createElement('p');
+    n.innerHTML = next_step;
+    n.value = next_step;
+    next.appendChild(n);
 }
