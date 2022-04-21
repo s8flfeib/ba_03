@@ -164,6 +164,51 @@ export class FireFly {
         );
         return response.data;
     }
+    // MANDANT
+    async MANDANT() {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/query/MANDANT`, {
+            input: {}
+        }
+        );
+        // console.log(response.data)
+        return response.data;
+    }
+    // FINANZBEAMTER
+    async FINANZBEAMTER() {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/query/FINANZBEAMTER`, {
+            input: {}
+        }
+        );
+        // console.log(response.data)
+        return response.data;
+    }
+    //Set STEUERBERATER
+    async STEUERBERATER() {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/query/STEUERBERATER`, {
+            input: {}
+        }
+        );
+        // console.log(response.data)
+        return response.data;
+    }
+    //Set grantRole
+    async grantRole(address: string, role: string) {
+        console.log("Set SB in SC")
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/grantRole`, {
+            input: {
+                account: address,
+                role: role
+
+            }
+        }
+        );
+        // console.log(response.data)
+        return response.data;
+    }
     //Set SB
     async setSB(address: string, sender_address: string) {
         console.log("Set SB in SC")
@@ -189,6 +234,12 @@ export class FireFly {
             }
         });
         return response.data.output;
+    }
+    //SetFA
+    async SetFA(f_addr: any, m_addr: any): Promise<any> {
+        const response = await this.rest.post(
+            `/namespaces/default/apis/mycontract/invoke/setFA`, { input: { addr: f_addr, sender: m_addr } });
+        return response.data;
     }
     //init_Mandant
     async init_M(address: string): Promise<any> {

@@ -113,7 +113,6 @@ contract Vollmacht is AccessControl {
 
     function init_Finanzamt(address addr) public onlyRole(FINANZBEAMTER) {
         //Nur Steuerberater
-        require(mandanten[addr].state == Process_State.NONE, "state incorrect");
         require(!steuerberater[addr].valid, "User ist allready part of FA");
         finanzbeamte[addr].valid = true;
     }

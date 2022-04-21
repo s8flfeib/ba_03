@@ -1,24 +1,16 @@
 var socket = io.connect('http://localhost:2000');
 
 socket.on('chat message received', async function (infos) {
-    console.log("Handel infos received from server")
-    console.log(infos)
-
     const role = infos.client.role;
-    console.log(role);
 
     switch (role) {
         case "M":
-            console.log("M")
             displaySteuerberater(infos.mandanten_steuerberater);
             break;
         case "S":
-            console.log("S")
-            console.log(infos.mandanten_steuerberater)
             displayMandanten(infos.mandanten_steuerberater)
             break;
         case "F":
-            console.log("F")
             finanzamt(infos)
             displayMandanten(infos.mandanten_steuerberater)
             break;
@@ -27,8 +19,6 @@ socket.on('chat message received', async function (infos) {
 });
 
 socket.on('send informations from F', async function (infos) {
-    console.log("WE are receiving the infos")
-    console.log(infos)
     const md = infos.md;
     const messages = infos.rows;
     const files = infos.file
@@ -56,8 +46,6 @@ socket.on('send informations from F', async function (infos) {
 });
 
 socket.on('send informations from SB', async function (infos) {
-    console.log("WE are receiving the infos")
-    console.log(infos)
     const md = infos.md;
     const messages = infos.rows;
     const files = infos.file
@@ -67,7 +55,6 @@ socket.on('send informations from SB', async function (infos) {
     const status = infos.state.state;
     displayVollmacht(vollmacht);
     displayStatus(status);
-    console.log(md)
     displayMandanten(md);
     displayMessages(messages, infos.user.did);
     displayDocuments(files);
@@ -85,23 +72,16 @@ socket.on('send informations from SB', async function (infos) {
 });
 
 socket.on('display infos without selected sb', async function (infos) {
-    console.log("Display Infos now!")
-    console.log(infos)
     displayMessages(infos.rows, infos.user.did)
     displayDocuments(infos.file)
     displayStatus(infos.state.state)
 });
 
 socket.on('send alert', async function (infos) {
-    console.log("Handel infos received from server")
-    console.log(infos)
-
     alert(infos)
 });
 
 socket.on('display mandant', async function (infos) {
-    console.log("Now display everything")
-    console.log(infos)
     displayCurrentSb(infos.sb[0].current_sb);
     displaySteuerberater(infos.mandanten_steuerberater);
     displayMessages(infos.rows, infos.user.did)
@@ -120,7 +100,6 @@ function finanzamt(informations) {
 
 
 function displayMandanten(mandanten) {
-    console.log("display Mandanten 3 times")
     var m = document.getElementById('md');
     var m2 = document.getElementById('md2');
     var m3 = document.getElementById('md3');
@@ -129,7 +108,6 @@ function displayMandanten(mandanten) {
     m3.innerHTML = '';
 
     for (var i in mandanten) {
-        console.log(mandanten[i].name)
         var opt = document.createElement('option');
         opt.value = mandanten[i].name;
         opt.innerHTML = mandanten[i].name;
@@ -177,7 +155,7 @@ function displayMessages(messages, client) {
             name = org_2.name;
         }
 
-
+        console.log(sender_did + " : " + client)
         if (sender_did == client) {
             message.textContent = time + " " + value;
             message.className = "my-chat"
@@ -271,7 +249,6 @@ function displayCurrentSb(sb) {
 }
 
 function displayNextStep(next_step) {
-    console.log(next_step)
     var next = document.getElementById('next_step');
     next.innerHTML = '';
     var n = document.createElement('p');

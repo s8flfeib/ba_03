@@ -196,17 +196,90 @@ async function main() {
         //Leitet den Nutzer zum entsprechenden Dashboard um!
         switch (role) {
             case "M":
+                if (await getEthIdByName(user_name) == null) {
+                    const orgs = await getIdentities();
+                    await setEthaddr(orgs[0][0], user_name);
+                    await setDid(orgs[1][0], user_name)
+                    const role = await firefly1.MANDANT();
+                    console.log(role)
+                    await firefly1.grantRole(orgs[0][0], role.output)
+                    await setFID(1, user_name)
+                    await firefly3.SetFA(orgs[0][2], orgs[0][0])
+                }
                 res.redirect("/users/mandant")
                 break;
             case "S":
+                if (await getEthIdByName(user_name) == null) {
+                    const orgs = await getIdentities();
+                    console.log(orgs)
+                    console.log(orgs[0])
+                    console.log(orgs[1][1])
+                    await setEthaddr(orgs[0][1], user_name);
+                    await setDid(orgs[1][1], user_name)
+                    const role = await firefly1.STEUERBERATER();
+                    await firefly1.grantRole(orgs[0][1], role.output)
+                }
                 res.redirect("/users/steuerberater")
                 break;
             case "F":
+                if (await getEthIdByName(user_name) == null) {
+                    const orgs = await getIdentities();
+                    await setEthaddr(orgs[0][2], user_name);
+                    await setDid(orgs[1][2], user_name)
+                    const role = await firefly1.FINANZBEAMTER();
+                    await firefly1.grantRole(orgs[0][2], role.output)
+                }
                 res.redirect("/users/finanzamt")
                 break;
         }
 
     });
+
+    async function getIdentities() {
+        const orgs = await firefly1.getIDs();
+        const addr = []
+        let value = []
+        let did = []
+        for (let i of orgs) {
+            if (i.parent != undefined) {
+                let hex = await firefly1.getHex(i.parent);
+                value.push(hex[0].value)
+            } else {
+                did.push(i.did)
+            }
+        }
+        addr.push(value)
+        addr.push(did)
+        return addr;
+    }
+    async function setEthaddr(addr: any, name: any) {
+        try {
+            await pool.query('update users set eth_addr=$1 where name=$2', [addr, name]);
+        } catch (err) {
+            throw err
+        }
+    }
+    async function setDid(did: any, name: any) {
+        try {
+            await pool.query('update users set did=$1 where name=$2', [did, name]);
+        } catch (err) {
+            throw err
+        }
+    }
+    async function setFID(id: any, name: any) {
+        try {
+            await pool.query('update users set finanzamt_id=$1 where name=$2', [id, name]);
+        } catch (err) {
+            throw err
+        }
+    }
+    async function setSID(id: any, name: any) {
+        try {
+            await pool.query('update users set steuerberater_id=$1 where name=$2', [id, name]);
+        } catch (err) {
+            throw err
+        }
+    }
     //-----------------------------------------------------------------------//
     //-------------------------------Finanzamt-------------------------------//
     //-----------------------------------------------------------------------//
@@ -239,8 +312,11 @@ async function main() {
         //Public key bzw. eth_addr des Mandanten aus DB
         const my_key = await getEthIdByName(m_name)
         const my_did = await getDIDByName(m_name)
-        const my_sb = await firefly.getSB(my_key);
-        const sb_did = await getDIDByAddr(my_sb)
+        console.log("??????????????????????????")
+        console.log(my_key)
+        console.log(my_did)
+        //const my_sb = await firefly.getSB(my_key);
+        //const sb_did = await getDIDByAddr(my_did)
         const fa_key = await getEthIdByName(req.user.name);
         //Sammel alle Messages des Finanzamts
         const allmessages = await getMessages(firefly);
@@ -263,7 +339,7 @@ async function main() {
         informations.client = { name: m_name, role: "M" };
         informations.rows = allmessages;
         informations.file = pdfs;
-        informations.sb = sb_did;
+        //informations.sb = sb_did;
         informations.voll = { vollmacht: voll_value };
         informations.state = { state: state_value };
         informations.user = { name: req.user.name, id: req.user.id, did: user_did }
@@ -937,9 +1013,20 @@ async function main() {
     })
 
     app.post("/users/register", async (req: any, res: any) => {
-        let { name, password, password2 } = req.body;
+        let { name, password, password2, role } = req.body;
+        switch (role) {
+            case "Mandant":
+                role = "M";
+                break;
+            case "Steuerberater":
+                role = "S";
+                break;
+            case "Finanzamt":
+                role = "F";
+                break;
+        }
         let errors: any = [];
-
+        console.log(name)
         //validation check
         if (!name || !password || !password2) {
             errors.push({ message: "Bitte füllen Sie alle Felder aus" });
@@ -950,6 +1037,9 @@ async function main() {
         // if (password.length < 6) {
         //     errors.push({ message: "Passwort muss bestimmte Länge haben"})
         // }
+        if (name.length > 50) {
+            errors.push({ message: "Name zu lang" })
+        }
         if (errors.length > 0) {
             res.render('register', { errors });
         } else {
@@ -970,11 +1060,13 @@ async function main() {
                         errors.push({ message: "Name bereits vergeben" });
                         res.render('register', { errors });
                     } else {
+                        console.log(name.length);
+                        console.log(hashedPassword.length)
                         //register the user
                         pool.query(
-                            `INSERT INTO users(name, password)
-                            VALUES($1, $2)
-                            RETURNING id, password`, [name, hashedPassword], (err: any, results: any) => {
+                            `INSERT INTO users(name, password, role)
+                            VALUES($1, $2, $3)
+                            RETURNING id, password`, [name, hashedPassword, role], (err: any, results: any) => {
                             if (err) {
                                 throw err
                             }
@@ -1028,40 +1120,6 @@ async function main() {
             return next();
         }
         res.redirect("/users/login");
-    }
-    //Pagination probably better on client side !?
-    function paginatedResults(model: any) {
-        return (req: any, res: any, next: any) => {
-            const page = parseInt(req.query.page);
-            const limit = parseInt(req.query.limit);
-
-            const startIndex = (page - 1) * limit;
-            const endINdex = page * limit;
-
-            const results = {} as any
-
-            if (endINdex < model.length) {
-                results.next = {
-                    page: page + 1,
-                    limit: limit
-                }
-            }
-
-
-            if (startIndex > 0) {
-                results.previous = {
-                    page: page - 1,
-                    limit: limit
-                }
-
-            }
-
-            results.RESULTS = model.slice(startIndex, endINdex);
-
-            //pass it to the results
-            res.paginatedResults = results;
-            next()
-        }
     }
 
     async function getFiles(firefly: FireFly) {
